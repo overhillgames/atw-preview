@@ -52,6 +52,11 @@ function Wait-ForUrl {
 }
 
 $rootPath = [System.IO.Path]::GetFullPath($PSScriptRoot)
+$previewScriptPath = Join-Path $rootPath "preview.ps1"
+if (-not (Test-Path -LiteralPath $previewScriptPath -PathType Leaf)) {
+  throw "Could not find preview.ps1 at $previewScriptPath."
+}
+
 $port = Find-AvailablePort -StartPort $StartPort -MaxPortTries $MaxPortTries
 $url = "http://127.0.0.1:$port"
 
@@ -60,9 +65,12 @@ Write-Host "Project folder: $rootPath"
 Write-Host "Server URL: $url"
 Write-Host ""
 
-$serverProcess = Start-Process powershell `
-  -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', '.\preview.ps1', '-Port', $port, '-MaxPortTries', 1 `
+$previewArguments = "-NoProfile -ExecutionPolicy Bypass -File `"$previewScriptPath`" -Port $port -MaxPortTries 1"
+$serverProcess = Start-Process `
+  -FilePath powershell.exe `
+  -ArgumentList $previewArguments `
   -WorkingDirectory $rootPath `
+  -WindowStyle Hidden `
   -PassThru
 
 if (-not (Wait-ForUrl -Url $url -TimeoutSeconds 10)) {
@@ -78,4 +86,4 @@ if (-not $NoBrowser) {
 }
 
 Write-Host "Game ready at $url" -ForegroundColor Green
-Write-Host "The preview server is running in its own PowerShell window."
+Write-Host "The preview server is running in the background."

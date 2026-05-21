@@ -23,7 +23,7 @@ Mobile viewport contract:
 - If possible, keep layered or higher-resolution source with bleed beyond the production crop so engineering can create future decorative fills without changing gameplay visibility.
 
 Use this visual placement guide while painting:
-- `assets/arena/artist-guide-overlay.svg`
+- `www/assets/arena/artist-guide-overlay.svg`
 
 Guidance:
 - Design to the full 420x760 area.
@@ -170,12 +170,12 @@ Composition guidance:
 Place final exports here:
 
 - Battlefield skin:
-  - `assets/arena/lane-bg.png`
+  - `www/assets/arena/lane-bg.png`
 - Options thumbnail background:
-  - `assets/arena/options-quad-bg.png`
+  - `www/assets/arena/options-quad-bg.png`
 - Towers:
-  - `assets/towers/*.png`
+  - `www/assets/towers/*.png`
 - Attackers:
-  - `assets/creeps/*-sprite-sheet.png`
+  - `www/assets/creeps/*-sprite-sheet.png`
 
 If you need reference screenshots from live gameplay placements, request a capture pass from engineering.

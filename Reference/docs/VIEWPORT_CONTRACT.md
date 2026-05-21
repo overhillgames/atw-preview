@@ -12,7 +12,7 @@ Line Tower Wars is a mobile-first Capacitor game with a fixed gameplay coordinat
 
 ## Scaling Rules
 
-- The game frame scales uniformly from one shared layout calculation in `script.js`.
+- The game frame scales uniformly from one shared layout calculation in `www/script.js`.
 - CSS receives:
   - `--app-height`
   - `--game-frame-width`
@@ -42,7 +42,7 @@ Global UI around the frame is still DOM, but its width derives from the shared f
 
 ## Safe Areas And WebViews
 
-- `index.html` uses `viewport-fit=cover`.
+- `www/index.html` uses `viewport-fit=cover`.
 - CSS reads `env(safe-area-inset-top/right/bottom/left)`.
 - `.app-shell.game-active` pads the game away from unsafe iOS/Android WebView edges.
 - JS reads `visualViewport` when available, falling back to `innerWidth`/`innerHeight`.

@@ -15,16 +15,19 @@
   - what was changed
   - how to verify locally
 - For gameplay tuning, update:
-  - `tower-balance-sheet.csv`
-  - `creep-balance-sheet.csv`
+  - `Reference/balance/tower-balance-sheet.csv`
+  - `Reference/balance/creep-balance-sheet.csv`
 
 ## Local Run
 
 ```powershell
-.\preview.ps1
+.\run-game.bat
 ```
 
-Open:
+This is the supported local entry point.
 
-`http://127.0.0.1:5500`
+For manual server-only preview:
 
+```powershell
+.\preview.ps1
+```

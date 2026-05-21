@@ -1,1 +1,0 @@
-do not scan this repo unless troubleshooting asset issues, building new assets, or replacing existing assets. 

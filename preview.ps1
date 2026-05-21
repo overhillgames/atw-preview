@@ -1,9 +1,16 @@
-﻿param(
+param(
   [int]$Port = 5500,
   [int]$MaxPortTries = 20
 )
 
 $ErrorActionPreference = "Stop"
+$projectRoot = [System.IO.Path]::GetFullPath($PSScriptRoot)
+$runtimeRoot = Join-Path $projectRoot "www"
+$previewDataRoot = Join-Path $projectRoot ".preview-data"
+
+if (-not (Test-Path -LiteralPath $runtimeRoot -PathType Container)) {
+  throw "Could not find the canonical runtime bundle at $runtimeRoot."
+}
 
 function Get-ContentType {
   param([string]$FilePath)
@@ -69,24 +76,27 @@ function Get-DefaultStatsJson {
 }
 
 function Get-StatsPath {
-  param([string]$RootPath)
-  return Join-Path $RootPath "match-stats.json"
+  param([string]$PreviewDataPath)
+  return Join-Path $PreviewDataPath "match-stats.json"
 }
 
 function Ensure-StatsFile {
-  param([string]$RootPath)
+  param([string]$PreviewDataPath)
 
-  $statsPath = Get-StatsPath -RootPath $RootPath
+  if (-not (Test-Path -LiteralPath $PreviewDataPath -PathType Container)) {
+    New-Item -ItemType Directory -Path $PreviewDataPath | Out-Null
+  }
+
+  $statsPath = Get-StatsPath -PreviewDataPath $PreviewDataPath
   if (-not (Test-Path -LiteralPath $statsPath -PathType Leaf)) {
     [System.IO.File]::WriteAllText($statsPath, (Get-DefaultStatsJson), [System.Text.Encoding]::UTF8)
   }
   return $statsPath
 }
 
-$rootPath = [System.IO.Path]::GetFullPath($PSScriptRoot)
-
-Write-Host "Starting local preview server for simple-clicker-game..." -ForegroundColor Cyan
-Write-Host "Project folder: $rootPath"
+Write-Host "Starting local preview server for Brian Line Tower Wars..." -ForegroundColor Cyan
+Write-Host "Project folder: $projectRoot"
+Write-Host "Runtime folder: $runtimeRoot"
 Write-Host "Starting port: $Port"
 
 $listener = $null
@@ -190,7 +200,7 @@ try {
       }
 
       if ($requestPath -eq "/stats") {
-        $statsPath = Ensure-StatsFile -RootPath $rootPath
+        $statsPath = Ensure-StatsFile -PreviewDataPath $previewDataRoot
 
         if ($method -eq "GET") {
           $bytes = [System.IO.File]::ReadAllBytes($statsPath)
@@ -221,9 +231,9 @@ try {
       }
 
       $relativePath = $requestPath.TrimStart("/").Replace("/", "\")
-      $fullPath = [System.IO.Path]::GetFullPath((Join-Path $rootPath $relativePath))
+      $fullPath = [System.IO.Path]::GetFullPath((Join-Path $runtimeRoot $relativePath))
 
-      if (-not $fullPath.StartsWith($rootPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+      if (-not $fullPath.StartsWith($runtimeRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
         $bytes = [System.Text.Encoding]::UTF8.GetBytes("403 Forbidden")
         Send-HttpResponse -Stream $stream -StatusCode 403 -Reason "Forbidden" -BodyBytes $bytes
         continue

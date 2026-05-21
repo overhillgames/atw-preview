@@ -7,7 +7,7 @@ echo.
 echo Opening the game in your default browser...
 echo.
 
-powershell -ExecutionPolicy Bypass -File ".\open-game.ps1" -StartPort 5510 -MaxPortTries 20
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\open-game.ps1" -StartPort 5510 -MaxPortTries 20
 
 if errorlevel 1 (
   echo.

@@ -2,7 +2,7 @@
   "name": "tower-defense-codex",
   "version": "1.0.0",
   "description": "A self-contained single-player lane defense strategy game for mobile.",
-  "main": "script.js",
+  "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

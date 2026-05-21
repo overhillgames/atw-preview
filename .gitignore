@@ -17,6 +17,7 @@ desktop.ini
 *.ps1xml
 
 match-stats.json
+/.preview-data/
 bri assets/
 
 # Local caches and temp artifacts

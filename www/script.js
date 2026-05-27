@@ -135,7 +135,7 @@ const TOWER_LEVEL_RULES = {
 };
 const ART_PACKS = {
   classic: {
-    battlefield: null,
+    battlefield: "assets/arena/battlefield_background.png",
     towers: {
       violet: "assets/towers/violet.png",
       yellow: "assets/towers/yellow.png",
@@ -1121,11 +1121,7 @@ function applyArtPack(artPackId, rerender = false) {
     img.src = cfg.path;
     attackerSprites[attackerId] = img;
   }
-  if (activeArtPack.battlefield) {
-    battlefieldBackgroundImage.src = activeArtPack.battlefield;
-  } else {
-    battlefieldBackgroundImage.src = "";
-  }
+  battlefieldBackgroundImage.src = activeArtPack.battlefield || "";
   document.documentElement.dataset.artPack = activeArtPackId;
 
   if (rerender) {

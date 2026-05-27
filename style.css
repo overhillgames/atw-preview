@@ -1048,43 +1048,26 @@ select {
 .dock {
   container-type: inline-size;
   min-width: 0;
-  border: 1px solid rgba(17, 24, 39, 0.35);
+  border: 1px solid var(--panel-border);
   border-radius: 1.2rem;
-  background-color: #efe5cf;
-  background-image: url("assets/arena/battlefield_background.png");
-  background-size: cover;
-  background-position: center;
-  padding: 0.55rem 0.55rem 0.5rem;
+  background: var(--panel);
+  padding: 0.85rem;
   box-shadow: var(--shadow);
 }
 
 .dock-header {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  align-items: center;
-  column-gap: 0.45rem;
-  row-gap: 0.05rem;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0.12rem;
   margin-bottom: 0.22rem;
 }
 
-.dock-label-image {
-  display: block;
-  height: clamp(20px, 7.1429cqw, 30px);
-  width: auto;
-  image-rendering: auto;
-  max-width: 100%;
+.dock-header h2 {
+  margin: 0;
+  font-size: 1rem;
 }
 
-.dock-label-towers {
-  max-width: 14rem;
-}
-
-.dock-label-attackers {
-  max-width: 16.6rem;
-}
-
-.dock-subtitle {
-  grid-column: 2;
+.dock-header p {
   margin: 0;
   font-size: 0.72rem;
   line-height: 1.05;
@@ -1107,7 +1090,7 @@ select {
 .card {
   border: 1px solid #7c8aa4;
   border-radius: 0.75rem;
-  background-color: rgba(255, 255, 255, 0.84);
+  background: #fff;
   padding: 0.14rem;
   cursor: grab;
   user-select: none;
@@ -1392,11 +1375,7 @@ button:disabled {
     margin-bottom: 0.18rem;
   }
 
-  .dock-label-image {
-    height: 24px;
-  }
-
-  .dock-subtitle {
+  .dock-header p {
     font-size: 0.62rem;
   }
 

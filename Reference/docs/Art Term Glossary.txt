@@ -1,0 +1,493 @@
+# Art Tower Wars — Plain Language Glossary
+
+## Logical Gameplay Viewport
+
+The fixed gameplay area the game is designed around.
+
+Think of this as:
+
+* the “camera window”
+* the gameplay rectangle
+* the competitive play area
+
+This area should always show:
+
+* battlefield
+* towers
+* creeps
+* deployment UI
+* timers/resources
+
+Example:
+You might decide:
+
+* all gameplay is designed around a 1080x1920 portrait rectangle
+
+Even if a phone is physically larger or wider, gameplay still fits inside this same logical area.
+
+Why it matters:
+Without this, different devices may:
+
+* crop gameplay
+* stretch gameplay
+* hide UI
+* show more battlefield to some players
+
+---
+
+## Gameplay Footprint
+
+The actual gameplay size of an object.
+
+This is NOT art size.
+
+It means:
+“How much gameplay space does this object occupy?”
+
+Used for:
+
+* collision
+* targeting
+* spacing
+* lane blocking
+* balance
+
+Example:
+A creep may visually look huge,
+but still only occupy:
+
+* 48x48 gameplay units
+
+Another creep may look tiny,
+but occupy the SAME gameplay footprint.
+
+Why it matters:
+Gameplay fairness must remain consistent even when skins differ.
+
+---
+
+## Gameplay Render Box
+
+The visual area the art is allowed to occupy onscreen.
+
+This is the “art container.”
+
+Example:
+
+Gameplay footprint:
+48x48
+
+Allowed visual render box:
+64x64
+
+Meaning:
+
+* gameplay collision stays 48x48
+* art can visually extend beyond that slightly
+
+This allows:
+
+* hats
+* weapons
+* wings
+* decorative shapes
+
+without changing gameplay.
+
+---
+
+## Source Resolution
+
+The resolution the artist originally creates the art in.
+
+Examples:
+
+* 32x32 pixel art
+* 512x512 HD illustration
+
+This is ONLY production quality.
+
+It should NOT affect:
+
+* gameplay balance
+* collision
+* onscreen size
+
+Two artists may create:
+
+* different source resolutions
+* different art styles
+
+but both export into:
+
+* the same render box
+* the same gameplay size
+
+---
+
+## Sprite
+
+A 2D image used in-game.
+
+Examples:
+
+* creep art
+* tower art
+* projectile art
+* explosion frames
+
+A sprite may be:
+
+* static
+* animated
+* part of a sprite sheet
+
+---
+
+## Sprite Sheet
+
+A single image containing multiple animation frames.
+
+Example:
+A 4-frame walking creep:
+
+Frame 1 | Frame 2 | Frame 3 | Frame 4
+
+The game cycles through frames to create motion.
+
+---
+
+## Frame
+
+One individual image in an animation.
+
+Example:
+A 4-frame walk cycle has:
+
+* 4 separate images
+
+More frames:
+
+* smoother animation
+* larger file sizes
+* more artist work
+
+Fewer frames:
+
+* simpler production
+* lighter performance cost
+
+---
+
+## Silhouette
+
+The recognizable outer shape of a character/object.
+
+Good silhouettes are:
+
+* readable instantly
+* recognizable at small sizes
+
+Example:
+You should identify:
+
+* “that’s a tank”
+* “that’s a fast creep”
+* “that’s a tower”
+
+even from far away.
+
+This is EXTREMELY important on phones.
+
+---
+
+## Anchor Point
+
+The specific point the game treats as the object’s position.
+
+Usually:
+
+* bottom-center
+  OR
+* center-center
+
+Used for:
+
+* placement
+* movement
+* projectile spawning
+* collision
+
+Example:
+A creep’s feet may always align to the anchor point.
+
+---
+
+## Hitbox / Collision Box
+
+The invisible gameplay area used for collision detection.
+
+Usually simpler than the art itself.
+
+Example:
+A dragon sprite may have huge wings,
+but the hitbox only covers the body.
+
+This improves:
+
+* fairness
+* readability
+* consistency
+
+---
+
+## Safe Area
+
+The area guaranteed visible on all devices.
+
+Contains important gameplay elements:
+
+* battlefield
+* cards
+* resources
+* timers
+
+Should NEVER be cut off.
+
+---
+
+## Bleed Area
+
+Extra decorative area outside the safe area.
+
+Can safely:
+
+* expand
+* crop
+* stretch slightly
+
+Examples:
+
+* background scenery
+* clouds
+* borders
+* decorative lighting
+
+Should NOT contain important gameplay information.
+
+---
+
+## Responsive Layout
+
+A layout that changes based on screen shape/size.
+
+Example:
+UI elements may:
+
+* reposition
+* resize
+* stack differently
+
+Good for:
+
+* menus
+* settings
+* shop screens
+
+Dangerous for:
+
+* competitive battlefield gameplay
+
+---
+
+## Aspect Ratio
+
+The shape of the screen.
+
+Example:
+
+* 9:16 portrait
+* 16:9 landscape
+
+Different phones have different aspect ratios.
+
+This is one reason safe areas matter.
+
+---
+
+## Pixel Art
+
+Artwork intentionally built from visible pixels.
+
+Characteristics:
+
+* sharp edges
+* low-resolution source art
+* usually nearest-neighbor scaling
+
+Example:
+32x32 sprites.
+
+---
+
+## HD Art
+
+Higher-resolution artwork with smoother detail.
+
+Characteristics:
+
+* anti-aliased edges
+* painted/detail-heavy appearance
+* often larger source files
+
+Example:
+512x512 painted character art.
+
+---
+
+## Anti-Aliasing
+
+A smoothing technique that softens jagged edges.
+
+HD art usually uses anti-aliasing.
+
+Pixel art usually avoids it.
+
+Example:
+Without anti-aliasing:
+
+* diagonal edges look stair-stepped
+
+With anti-aliasing:
+
+* edges appear smoother
+
+---
+
+## Edge Behavior
+
+How sprite edges visually behave when scaled or displayed.
+
+Pixel art:
+
+* sharp hard edges
+
+HD art:
+
+* soft blended edges
+
+Mixing these carelessly can make a game feel visually inconsistent.
+
+---
+
+## Nearest-Neighbor Scaling
+
+A scaling method commonly used for pixel art.
+
+Keeps pixels:
+
+* sharp
+* blocky
+* crisp
+
+Without this:
+pixel art becomes blurry.
+
+---
+
+## UI (User Interface)
+
+The non-gameplay visual controls/information.
+
+Examples:
+
+* buttons
+* mana/resource bars
+* timers
+* menus
+* card rows
+
+---
+
+## VFX (Visual Effects)
+
+Temporary animated visual effects.
+
+Examples:
+
+* explosions
+* tower shots
+* sparkles
+* smoke
+* hit flashes
+
+---
+
+## Visual Readability
+
+How quickly players understand what they’re seeing.
+
+Critical for mobile games because:
+
+* screens are small
+* matches are fast
+* players glance quickly
+
+Good readability usually means:
+
+* clear silhouettes
+* strong contrast
+* limited clutter
+* consistent scale
+
+---
+
+## Visual Density
+
+How visually “busy” something appears.
+
+Too much density:
+
+* cluttered gameplay
+* difficult targeting
+* player confusion
+
+Competitive mobile games generally benefit from:
+
+* lower visual density
+* stronger clarity
+
+---
+
+## Canonical
+
+The official standard/reference version.
+
+Example:
+The canonical battlefield layout means:
+
+* the one true approved battlefield reference
+
+Everything else should follow it.
+
+---
+
+## Unified Art Style Per Match
+
+A rule where all battlefield assets in a match use the same visual style.
+
+Example:
+If the player selects:
+
+* pixel battlefield skin
+
+then:
+
+* towers
+* creeps
+* effects
+* battlefield
+
+all use pixel style together.
+
+This prevents visual chaos.

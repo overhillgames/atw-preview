@@ -31,9 +31,16 @@ const towerDefs = [
 const LEGACY_TOWER_ID_ALIASES = {
   orange: "blue"
 };
+const LEGACY_ART_PACK_ID_ALIASES = {
+  jonCarling: "classic"
+};
 
 function normalizeTowerId(towerId) {
   return LEGACY_TOWER_ID_ALIASES[towerId] || towerId;
+}
+
+function normalizeArtPackId(artPackId) {
+  return LEGACY_ART_PACK_ID_ALIASES[artPackId] || artPackId;
 }
 
 function readNumberWithLegacyId(source, id) {
@@ -127,8 +134,8 @@ const TOWER_LEVEL_RULES = {
   }
 };
 const ART_PACKS = {
-  jonCarling: {
-    battlefield: "assets/arena/battlefield_background.png",
+  classic: {
+    battlefield: null,
     towers: {
       violet: "assets/towers/violet.png",
       yellow: "assets/towers/yellow.png",
@@ -137,11 +144,11 @@ const ART_PACKS = {
       blue: "assets/towers/blue.png"
     },
     attackerIcons: {
-      imp: "assets/creeps/spider-icon.png",
-      runner: "assets/creeps/runner-icon.png",
-      brute: "assets/creeps/eye-icon.png",
-      wisp: "assets/creeps/jellyfish-icon.png",
-      tank: "assets/creeps/tank-icon.png"
+      imp: null,
+      runner: null,
+      brute: null,
+      wisp: null,
+      tank: null
     },
     attackerSprites: {
       imp: { path: "assets/creeps/imp-sprite-sheet.png", frameWidth: 272, frameHeight: 206, frames: 4, fps: 6 },
@@ -163,9 +170,9 @@ const ART_PACKS = {
     attackerIcons: {
       imp: null,
       runner: null,
-      brute: "assets/creeps/eye-icon.png",
-      wisp: "assets/creeps/jellyfish-icon.png",
-      tank: "assets/creeps/tank-icon.png"
+      brute: null,
+      wisp: null,
+      tank: null
     },
     attackerSprites: {
       imp: { path: "assets/unfuneralod/creeps/imp.png", frameWidth: 64, frameHeight: 64, frames: 4, fps: 6, renderWidth: 46, renderHeight: 46, previewFrame: true },
@@ -178,18 +185,18 @@ const ART_PACKS = {
 };
 
 const attackerDefs = [
-  { id: "imp", name: "Spider", cost: 2, hp: 18, speed: 0.09, color: "#1f2937" },
+  { id: "imp", name: "Imp", cost: 2, hp: 18, speed: 0.09, color: "#1f2937" },
   { id: "runner", name: "Runner", cost: 3, hp: 16.2, speed: 0.126, color: "#d97706" },
-  { id: "brute", name: "Eye", cost: 4, hp: 39.6, speed: 0.0825, color: "#15803d" },
-  { id: "wisp", name: "Jellyfish", cost: 5, hp: 30.8, speed: 0.132, color: "#8b5cf6" },
+  { id: "brute", name: "Brute", cost: 4, hp: 39.6, speed: 0.0825, color: "#15803d" },
+  { id: "wisp", name: "Wisp", cost: 5, hp: 30.8, speed: 0.132, color: "#8b5cf6" },
   { id: "tank", name: "Tank", cost: 6, hp: 57.2, speed: 0.0682, color: "#0f766e" }
 ];
 const DEFAULT_OPTIONS = {
   difficulty: "yellow",
-  artPack: "jonCarling"
+  artPack: "classic"
 };
 const ART_PACK_OPTIONS = [
-  { id: "jonCarling", name: "Jon Carling", unlocked: true, icon: "assets/ui/artist-icons/joncarling.png", instagram: "https://www.instagram.com/joncarling/", quadBackground: "assets/arena/quad-backgrounds/joncarling.png", preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
+  { id: "classic", name: "Classic", unlocked: true, preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
   { id: "unfuneralOD", name: "UnfuneralOD", unlocked: true, icon: "assets/ui/artist-icons/unfuneralod.png", instagram: "https://www.instagram.com/unfuneralod/", quadBackground: "assets/arena/quad-backgrounds/unfuneralod.png", preview: { creeps: ["imp", "runner"], towers: ["violet", "green"] } },
   { id: "artist3", name: "Artist Slot 3", unlocked: false, preview: { creeps: ["imp", "runner"], towers: ["red", "blue"] } },
   { id: "artist4", name: "Artist Slot 4", unlocked: false, preview: { creeps: ["brute", "wisp"], towers: ["violet", "yellow"] } },
@@ -282,7 +289,7 @@ const AI_DIFFICULTY_SETTINGS = {
 };
 let gameOptions = { ...DEFAULT_OPTIONS };
 let activeArtPackId = DEFAULT_OPTIONS.artPack;
-let activeArtPack = ART_PACKS[activeArtPackId] || ART_PACKS.jonCarling;
+let activeArtPack = ART_PACKS[activeArtPackId] || ART_PACKS[DEFAULT_OPTIONS.artPack];
 let towerSpritePaths = activeArtPack.towers;
 let attackerIconPaths = activeArtPack.attackerIcons;
 let attackerSpriteConfig = activeArtPack.attackerSprites;
@@ -1024,7 +1031,8 @@ function renderRankingRows(container, items, emptyLabel) {
 }
 
 function getArtPackOption(artPackId) {
-  return ART_PACK_OPTIONS.find((option) => option.id === artPackId) || ART_PACK_OPTIONS[0];
+  const normalizedArtPackId = normalizeArtPackId(artPackId);
+  return ART_PACK_OPTIONS.find((option) => option.id === normalizedArtPackId) || ART_PACK_OPTIONS[0];
 }
 
 function getArtPackForPreview(option) {
@@ -1035,8 +1043,8 @@ function getArtPackForPreview(option) {
 function getAttackerPreviewMarkup(pack, attackerId, alt) {
   const fallbackPack = ART_PACKS[DEFAULT_OPTIONS.artPack];
   const spriteCfg = pack.attackerSprites?.[attackerId] || fallbackPack.attackerSprites?.[attackerId];
-  const iconPath = pack.attackerIcons?.[attackerId] || fallbackPack.attackerIcons?.[attackerId] || spriteCfg?.path;
-  if (spriteCfg?.previewFrame && !pack.attackerIcons?.[attackerId]) {
+  const iconPath = pack.attackerIcons?.[attackerId] || fallbackPack.attackerIcons?.[attackerId] || null;
+  if (spriteCfg && !iconPath) {
     return `<span class="art-thumb-sprite" style="--sprite-url: url('${spriteCfg.path}'); --sprite-frames: ${spriteCfg.frames};" role="img" aria-label="${alt}"></span>`;
   }
   return `<img src="${iconPath}" alt="${alt}" />`;
@@ -1099,8 +1107,9 @@ function refreshArtOptionsUI() {
 }
 
 function applyArtPack(artPackId, rerender = false) {
-  const nextPack = ART_PACKS[artPackId] || ART_PACKS[DEFAULT_OPTIONS.artPack];
-  activeArtPackId = ART_PACKS[artPackId] ? artPackId : DEFAULT_OPTIONS.artPack;
+  const normalizedArtPackId = normalizeArtPackId(artPackId);
+  const nextPack = ART_PACKS[normalizedArtPackId] || ART_PACKS[DEFAULT_OPTIONS.artPack];
+  activeArtPackId = ART_PACKS[normalizedArtPackId] ? normalizedArtPackId : DEFAULT_OPTIONS.artPack;
   activeArtPack = nextPack;
   towerSpritePaths = activeArtPack.towers;
   attackerIconPaths = activeArtPack.attackerIcons;
@@ -1112,7 +1121,11 @@ function applyArtPack(artPackId, rerender = false) {
     img.src = cfg.path;
     attackerSprites[attackerId] = img;
   }
-  battlefieldBackgroundImage.src = activeArtPack.battlefield;
+  if (activeArtPack.battlefield) {
+    battlefieldBackgroundImage.src = activeArtPack.battlefield;
+  } else {
+    battlefieldBackgroundImage.src = "";
+  }
   document.documentElement.dataset.artPack = activeArtPackId;
 
   if (rerender) {
@@ -1143,6 +1156,7 @@ function loadOptions() {
       ...DEFAULT_OPTIONS,
       ...parsed
     };
+    gameOptions.artPack = normalizeArtPackId(gameOptions.artPack);
     if (!AI_DIFFICULTY_SETTINGS[gameOptions.difficulty]) {
       gameOptions.difficulty = DEFAULT_OPTIONS.difficulty;
     }
@@ -1172,12 +1186,13 @@ function setDifficulty(difficulty) {
 }
 
 function setArtPack(artPackId) {
-  const option = getArtPackOption(artPackId);
-  if (!option.unlocked || !ART_PACKS[artPackId]) {
+  const normalizedArtPackId = normalizeArtPackId(artPackId);
+  const option = getArtPackOption(normalizedArtPackId);
+  if (!option.unlocked || !ART_PACKS[normalizedArtPackId]) {
     return;
   }
-  gameOptions.artPack = artPackId;
-  applyArtPack(artPackId, true);
+  gameOptions.artPack = normalizedArtPackId;
+  applyArtPack(normalizedArtPackId, true);
   saveOptions();
   refreshArtOptionsUI();
 }
@@ -1591,7 +1606,7 @@ function createCards() {
     card.dataset.cost = String(attacker.cost);
     const spriteCfg = attackerSpriteConfig[attacker.id];
     const iconPath = attackerIconPaths[attacker.id];
-    if (spriteCfg?.previewFrame && !iconPath) {
+    if (spriteCfg && !iconPath) {
       card.innerHTML = `
         <span class="attacker-icon-card attacker-sprite-preview" style="--sprite-url: url('${spriteCfg.path}'); --sprite-frames: ${spriteCfg.frames};" role="img" aria-label="${attacker.name}"></span>
         <span class="attacker-cost">${attacker.cost}</span>

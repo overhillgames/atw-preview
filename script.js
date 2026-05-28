@@ -20,6 +20,44 @@ let opponentAttackerUpgrades = {};     // loaded from Firebase before each battl
 const BASE_TOWER_CONE_DEGREES = 130;
 const LOGICAL_CANVAS_WIDTH = 420;
 const LOGICAL_CANVAS_HEIGHT = 760;
+const ARTBOARD_WIDTH = 630;
+const ARTBOARD_HEIGHT = 860;
+const SAFE_AREA_OFFSET_X = 105;
+const SAFE_AREA_OFFSET_Y = 50;
+const BATTLEFIELD_BOUNDS = { x: 10, y: 20, width: 400, height: 570 };
+const PIXI_LAYER_ASSET_ROOT = "assets/battlefield-template-v3";
+const PIXI_TEMPLATE_LAYERS = [
+  "01_bleed_area.png",
+  "02_safe_area.png",
+  "03_battlefield.png",
+  "04_tower_dock.png",
+  "05_creep_dock.png",
+  "06_timer_round_panel.png",
+  "07_timer_round_containers.png",
+  "08_score_mana_panel.png",
+  "09_score_mana_containers.png",
+  "10_tower_card_frames.png",
+  "12_creep_card_frames.png"
+];
+const BATTLEFIELD_TOWER_MARKER_PATH = "assets/ui/markers/battlefield-tower-marker.png";
+const BATTLEFIELD_TOWER_MARKER_SIZE = 48;
+const TOWER_RENDER_BOX_WIDTH = 64;
+const TOWER_RENDER_BOX_HEIGHT = 78;
+const TOWER_CARD_CENTERS = [
+  { x: 161, y: 691 },
+  { x: 237, y: 691 },
+  { x: 313, y: 691 },
+  { x: 389, y: 691 },
+  { x: 465, y: 691 }
+];
+const CREEP_CARD_CENTERS = [
+  { x: 161, y: 772 },
+  { x: 237, y: 772 },
+  { x: 313, y: 772 },
+  { x: 389, y: 772 },
+  { x: 465, y: 772 }
+];
+const TIMER_FILL_RECT = { x: 22, y: 238, width: 20, height: 122 };
 
 const towerDefs = [
   { id: "violet", name: "Violet", cost: 2, damage: 2, range: 0.416, fireRate: 0.935, color: "#7c3aed", coneDegrees: 220, maxTargets: 1 },
@@ -32,7 +70,6 @@ const LEGACY_TOWER_ID_ALIASES = {
   orange: "blue"
 };
 const LEGACY_ART_PACK_ID_ALIASES = {
-  jonCarling: "classic"
 };
 
 function normalizeTowerId(towerId) {
@@ -137,6 +174,37 @@ const ART_PACKS = {
   classic: {
     battlefield: "assets/arena/battlefield_background.png",
     towers: {
+      violet: "assets/classic/towers/violet.png",
+      yellow: "assets/classic/towers/yellow.png",
+      red: "assets/classic/towers/red.png",
+      green: "assets/classic/towers/green.png",
+      blue: "assets/classic/towers/blue.png"
+    },
+    towerFireSheets: {
+      violet: { path: "assets/classic/towers/sheets/violet-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 },
+      yellow: { path: "assets/classic/towers/sheets/yellow-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 },
+      red: { path: "assets/classic/towers/sheets/red-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 },
+      green: { path: "assets/classic/towers/sheets/green-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 },
+      blue: { path: "assets/classic/towers/sheets/blue-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 }
+    },
+    attackerIcons: {
+      imp: null,
+      runner: null,
+      brute: null,
+      wisp: null,
+      tank: null
+    },
+    attackerSprites: {
+      imp: { path: "assets/creeps/imp-sprite-sheet.png", frameWidth: 272, frameHeight: 206, frames: 4, fps: 6 },
+      runner: { path: "assets/creeps/runner-sprite-sheet.png", frameWidth: 276, frameHeight: 286, frames: 4, fps: 6 },
+      brute: { path: "assets/creeps/brute-sprite-sheet.png", frameWidth: 270, frameHeight: 272, frames: 4, fps: 6 },
+      wisp: { path: "assets/creeps/wisp-sprite-sheet.png", frameWidth: 242, frameHeight: 260, frames: 4, fps: 6 },
+      tank: { path: "assets/creeps/tank-sprite-sheet.png", frameWidth: 270, frameHeight: 302, frames: 4, fps: 6 }
+    }
+  },
+  jonCarling: {
+    battlefield: "assets/arena/battlefield_background.png",
+    towers: {
       violet: "assets/towers/violet.png",
       yellow: "assets/towers/yellow.png",
       red: "assets/towers/red.png",
@@ -197,8 +265,8 @@ const DEFAULT_OPTIONS = {
 };
 const ART_PACK_OPTIONS = [
   { id: "classic", name: "Classic", unlocked: true, preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
+  { id: "jonCarling", name: "Jon Carling", unlocked: true, icon: "assets/ui/artist-icons/joncarling.png", instagram: "https://www.instagram.com/joncarling/", quadBackground: "assets/arena/quad-backgrounds/joncarling.png", preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
   { id: "unfuneralOD", name: "UnfuneralOD", unlocked: true, icon: "assets/ui/artist-icons/unfuneralod.png", instagram: "https://www.instagram.com/unfuneralod/", quadBackground: "assets/arena/quad-backgrounds/unfuneralod.png", preview: { creeps: ["imp", "runner"], towers: ["violet", "green"] } },
-  { id: "artist3", name: "Artist Slot 3", unlocked: false, preview: { creeps: ["imp", "runner"], towers: ["red", "blue"] } },
   { id: "artist4", name: "Artist Slot 4", unlocked: false, preview: { creeps: ["brute", "wisp"], towers: ["violet", "yellow"] } },
   { id: "artist5", name: "Artist Slot 5", unlocked: false, preview: { creeps: ["runner", "tank"], towers: ["green", "blue"] } },
   { id: "artist6", name: "Artist Slot 6", unlocked: false, preview: { creeps: ["imp", "wisp"], towers: ["red", "green"] } },
@@ -291,6 +359,7 @@ let gameOptions = { ...DEFAULT_OPTIONS };
 let activeArtPackId = DEFAULT_OPTIONS.artPack;
 let activeArtPack = ART_PACKS[activeArtPackId] || ART_PACKS[DEFAULT_OPTIONS.artPack];
 let towerSpritePaths = activeArtPack.towers;
+let towerFireSheetConfig = activeArtPack.towerFireSheets || {};
 let attackerIconPaths = activeArtPack.attackerIcons;
 let attackerSpriteConfig = activeArtPack.attackerSprites;
 let attackerSprites = {};
@@ -330,6 +399,8 @@ const waveProgressFillEl = document.getElementById("wave-progress-fill");
 const statusTextEl = document.getElementById("status-text");
 const replayBtnEl = document.getElementById("replay-btn");
 const pauseBtnEl = document.getElementById("pause-btn");
+const floatingPauseBtnEl = document.getElementById("floating-pause-btn");
+const readyBtnEl = document.getElementById("ready-btn");
 const battleSkipBtnEl = document.getElementById("battle-skip-btn");
 const shopOverlayEl = document.getElementById("shop-overlay");
 const matchEndOverlayEl = document.getElementById("match-end-overlay");
@@ -368,13 +439,14 @@ const BATTLEFIELD_BOTTOM_TRIM_PX = 10;
 const FIELD_SHIFT_Y = BATTLEFIELD_BOTTOM_TRIM_PX / LOGICAL_CANVAS_HEIGHT;
 const prefersTouchInput = window.matchMedia("(pointer: coarse)").matches || ("ontouchstart" in window);
 const MIN_GAME_FRAME_SCALE = 0.5;
-const MAX_PHONE_FRAME_SCALE = 1;
+const MAX_PHONE_FRAME_SCALE = Number.POSITIVE_INFINITY;
 const MAX_DESKTOP_PREVIEW_SCALE = 1;
 const GAME_FRAME_ASPECT = LOGICAL_CANVAS_WIDTH / LOGICAL_CANVAS_HEIGHT;
 
 const state = {
   screen: "menu",
   waveNumber: 1,
+  completedRounds: 0,
   phase: "banner",
   phaseTimer: PREP_SECONDS,
   playerMana: 9,
@@ -395,6 +467,7 @@ const state = {
   fireBursts: [],
   yellowLeaps: [],
   towerFlashes: [],
+  towerFireAnimations: [],
   deathParticles: [],
   nextUnitId: 1,
   nextProjectileId: 1,
@@ -443,31 +516,61 @@ let audioUnlocked = false;
 let lastAppHiddenAt = null;
 let wasPausedBeforeBackground = false;
 let laneBackgroundCanvas = null;
+const pixiState = {
+  app: null,
+  ready: false,
+  artboard: null,
+  battlefieldLayer: null,
+  battlefieldMask: null,
+  markerLayer: null,
+  uiLayer: null,
+  towerLayer: null,
+  dockIconLayer: null,
+  textLayer: null,
+  timerFill: null,
+  timerMask: null,
+  legacyTexture: null,
+  legacySprite: null,
+  towerTextures: {},
+  towerFireTextures: {},
+  attackerTextures: {},
+  towerSprites: new Map(),
+  cardSprites: [],
+  cardText: [],
+  cardEntries: [],
+  hudText: {},
+  lastTowerSignature: "",
+  lastCardSignature: "",
+  lastHudSignature: ""
+};
+let pixiTowerDragState = null;
+let suppressNextPixiTowerTap = false;
+window.atwPixiState = pixiState;
 
 const laneStarts = {
-  player: { x: 0.5, y: 0.93 - FIELD_SHIFT_Y },
-  ai: { x: 0.5, y: 0.07 }
+  player: { x: 0.5, y: 560 / LOGICAL_CANVAS_HEIGHT },
+  ai: { x: 0.5, y: 40 / LOGICAL_CANVAS_HEIGHT }
 };
 
 const laneEnds = {
-  player: { x: 0.5, y: 0.11 - FIELD_SHIFT_Y },
-  ai: { x: 0.5, y: 0.89 - FIELD_SHIFT_Y }
+  player: { x: 0.5, y: 80 / LOGICAL_CANVAS_HEIGHT },
+  ai: { x: 0.5, y: 520 / LOGICAL_CANVAS_HEIGHT }
 };
 
 const towerPosPlayer = [
-  { x: 0.34, y: 0.77 + FIELD_SHIFT_Y },
-  { x: 0.66, y: 0.77 + FIELD_SHIFT_Y },
-  { x: 0.22, y: 678 / LOGICAL_CANVAS_HEIGHT },
-  { x: 0.5, y: 678 / LOGICAL_CANVAS_HEIGHT },
-  { x: 0.78, y: 678 / LOGICAL_CANVAS_HEIGHT }
+  { x: 147 / LOGICAL_CANVAS_WIDTH, y: 479 / LOGICAL_CANVAS_HEIGHT },
+  { x: 273 / LOGICAL_CANVAS_WIDTH, y: 479 / LOGICAL_CANVAS_HEIGHT },
+  { x: 95 / LOGICAL_CANVAS_WIDTH, y: 539 / LOGICAL_CANVAS_HEIGHT },
+  { x: 210 / LOGICAL_CANVAS_WIDTH, y: 539 / LOGICAL_CANVAS_HEIGHT },
+  { x: 324 / LOGICAL_CANVAS_WIDTH, y: 539 / LOGICAL_CANVAS_HEIGHT }
 ];
 
 const towerPosAI = [
-  { x: 0.34, y: 0.23 - FIELD_SHIFT_Y },
-  { x: 0.66, y: 0.23 - FIELD_SHIFT_Y },
-  { x: 0.22, y: 82 / LOGICAL_CANVAS_HEIGHT },
-  { x: 0.5, y: 82 / LOGICAL_CANVAS_HEIGHT },
-  { x: 0.78, y: 82 / LOGICAL_CANVAS_HEIGHT }
+  { x: 147 / LOGICAL_CANVAS_WIDTH, y: 130 / LOGICAL_CANVAS_HEIGHT },
+  { x: 273 / LOGICAL_CANVAS_WIDTH, y: 130 / LOGICAL_CANVAS_HEIGHT },
+  { x: 95 / LOGICAL_CANVAS_WIDTH, y: 70 / LOGICAL_CANVAS_HEIGHT },
+  { x: 210 / LOGICAL_CANVAS_WIDTH, y: 70 / LOGICAL_CANVAS_HEIGHT },
+  { x: 324 / LOGICAL_CANVAS_WIDTH, y: 70 / LOGICAL_CANVAS_HEIGHT }
 ];
 
 const slotPosPlayer = towerPosPlayer;
@@ -479,6 +582,14 @@ let gameFrameLayout = {
   viewportHeight: LOGICAL_CANVAS_HEIGHT,
   frameWidth: LOGICAL_CANVAS_WIDTH,
   frameHeight: LOGICAL_CANVAS_HEIGHT,
+  safeFrameWidth: LOGICAL_CANVAS_WIDTH,
+  safeFrameHeight: LOGICAL_CANVAS_HEIGHT,
+  safeFrameX: 0,
+  safeFrameY: 0,
+  visibleLogicalWidth: LOGICAL_CANVAS_WIDTH,
+  visibleLogicalHeight: LOGICAL_CANVAS_HEIGHT,
+  safeOffsetLogicalX: 0,
+  safeOffsetLogicalY: 0,
   scale: 1,
   reservedHeight: 0,
   desktopPreview: false
@@ -497,6 +608,17 @@ function readPixelValue(value) {
 }
 
 function getShellContentBox(viewportWidth, viewportHeight) {
+  if (state.screen === "game") {
+    const rootStyles = window.getComputedStyle(document.documentElement);
+    const safeLeft = readPixelValue(rootStyles.getPropertyValue("--safe-left"));
+    const safeRight = readPixelValue(rootStyles.getPropertyValue("--safe-right"));
+    const safeTop = readPixelValue(rootStyles.getPropertyValue("--safe-top"));
+    const safeBottom = readPixelValue(rootStyles.getPropertyValue("--safe-bottom"));
+    return {
+      width: Math.max(1, viewportWidth - safeLeft - safeRight),
+      height: Math.max(1, viewportHeight - safeTop - safeBottom)
+    };
+  }
   const shellStyles = window.getComputedStyle(appShellEl);
   const paddingLeft = readPixelValue(shellStyles.paddingLeft);
   const paddingRight = readPixelValue(shellStyles.paddingRight);
@@ -516,25 +638,28 @@ function measureGameChromeHeight() {
   if (state.screen !== "game") {
     return 0;
   }
-  const screenStyles = window.getComputedStyle(gameScreenEl);
-  const rowGap = readPixelValue(screenStyles.rowGap);
   return Math.ceil(
     (topBarEl?.getBoundingClientRect().height || 0) +
     (hudStripEl?.getBoundingClientRect().height || 0) +
-    (bottomBarEl?.getBoundingClientRect().height || 0) +
-    rowGap * 3
+    (bottomBarEl?.getBoundingClientRect().height || 0)
   );
 }
 
 function applyGameFrameLayout(layout) {
   gameFrameLayout = layout;
+  window.gameFrameLayout = gameFrameLayout;
   document.documentElement.style.setProperty("--app-height", `${layout.viewportHeight}px`);
   document.documentElement.style.setProperty("--game-frame-width", `${layout.frameWidth}px`);
   document.documentElement.style.setProperty("--game-frame-height", `${layout.frameHeight}px`);
+  document.documentElement.style.setProperty("--safe-frame-x", `${layout.safeFrameX || 0}px`);
+  document.documentElement.style.setProperty("--safe-frame-y", `${layout.safeFrameY || 0}px`);
+  document.documentElement.style.setProperty("--pixi-safe-width", `${layout.safeFrameWidth || layout.frameWidth}px`);
+  document.documentElement.style.setProperty("--pixi-safe-height", `${layout.safeFrameHeight || layout.frameHeight}px`);
   document.documentElement.style.setProperty("--game-frame-scale", layout.scale.toFixed(4));
   document.documentElement.style.setProperty("--game-frame-aspect", String(GAME_FRAME_ASPECT));
   appShellEl.classList.toggle("game-active", state.screen === "game");
   gameScreenEl.classList.toggle("desktop-debug-preview", layout.desktopPreview);
+  resizePixiRendererToLayout();
 }
 
 function calculateGameFrameLayout() {
@@ -542,34 +667,40 @@ function calculateGameFrameLayout() {
   const desktopPreview = state.screen === "game" && isDesktopDebugPreviewViewport();
   const shellBox = getShellContentBox(viewport.width, viewport.height);
   const maxScale = desktopPreview ? MAX_DESKTOP_PREVIEW_SCALE : MAX_PHONE_FRAME_SCALE;
-  let scale = Math.min(maxScale, shellBox.width / LOGICAL_CANVAS_WIDTH);
+  const reservedHeight = measureGameChromeHeight();
+  const availableWidth = shellBox.width;
+  const availableHeight = Math.max(1, shellBox.height - reservedHeight);
+  let scale = Math.min(maxScale, availableWidth / LOGICAL_CANVAS_WIDTH, availableHeight / LOGICAL_CANVAS_HEIGHT);
+  scale = Math.max(MIN_GAME_FRAME_SCALE, scale);
+
+  const maxBleedWidth = ARTBOARD_WIDTH * scale;
+  const maxBleedHeight = ARTBOARD_HEIGHT * scale;
+  const frameWidth = Math.round(Math.min(availableWidth, maxBleedWidth));
+  const frameHeight = Math.round(Math.min(availableHeight, maxBleedHeight));
+  const safeFrameWidth = LOGICAL_CANVAS_WIDTH * scale;
+  const safeFrameHeight = LOGICAL_CANVAS_HEIGHT * scale;
+  const safeFrameX = (frameWidth - safeFrameWidth) / 2;
+  const safeFrameY = (frameHeight - safeFrameHeight) / 2;
+  const visibleLogicalWidth = frameWidth / scale;
+  const visibleLogicalHeight = frameHeight / scale;
 
   applyGameFrameLayout({
-    ...gameFrameLayout,
     viewportWidth: viewport.width,
     viewportHeight: viewport.height,
-    frameWidth: Math.round(LOGICAL_CANVAS_WIDTH * scale),
-    frameHeight: Math.round(LOGICAL_CANVAS_HEIGHT * scale),
+    frameWidth,
+    frameHeight,
+    safeFrameWidth,
+    safeFrameHeight,
+    safeFrameX,
+    safeFrameY,
+    visibleLogicalWidth,
+    visibleLogicalHeight,
+    safeOffsetLogicalX: safeFrameX / scale,
+    safeOffsetLogicalY: safeFrameY / scale,
     scale,
+    reservedHeight,
     desktopPreview
   });
-
-  // Docks and HUD depend on frame width, so measure after applying a first pass.
-  for (let i = 0; i < 2; i += 1) {
-    const reservedHeight = measureGameChromeHeight();
-    const heightScale = (shellBox.height - reservedHeight) / LOGICAL_CANVAS_HEIGHT;
-    scale = Math.min(maxScale, shellBox.width / LOGICAL_CANVAS_WIDTH, heightScale);
-    scale = Math.max(MIN_GAME_FRAME_SCALE, scale);
-    applyGameFrameLayout({
-      viewportWidth: viewport.width,
-      viewportHeight: viewport.height,
-      frameWidth: Math.round(LOGICAL_CANVAS_WIDTH * scale),
-      frameHeight: Math.round(LOGICAL_CANVAS_HEIGHT * scale),
-      scale,
-      reservedHeight,
-      desktopPreview
-    });
-  }
 }
 
 function updateViewportHeight() {
@@ -799,6 +930,7 @@ function saveMatchStateNow() {
 
   const snapshot = {
     waveNumber: state.waveNumber,
+    completedRounds: state.completedRounds,
     phase: state.phase,
     phaseTimer: state.phaseTimer,
     playerMana: state.playerMana,
@@ -818,6 +950,7 @@ function saveMatchStateNow() {
     fireBursts: state.fireBursts,
     yellowLeaps: state.yellowLeaps,
     towerFlashes: state.towerFlashes,
+    towerFireAnimations: state.towerFireAnimations,
     deathParticles: state.deathParticles,
     nextUnitId: state.nextUnitId,
     nextProjectileId: state.nextProjectileId,
@@ -898,7 +1031,11 @@ function restoreSavedMatchState() {
     state.shopSelectionId = normalizeTowerId(state.shopSelectionId);
     state.fireBursts = Array.isArray(state.fireBursts) ? state.fireBursts : [];
     state.yellowLeaps = Array.isArray(state.yellowLeaps) ? state.yellowLeaps : [];
+    state.towerFireAnimations = [];
     state.nextFireBurstId = Number.isFinite(state.nextFireBurstId) ? state.nextFireBurstId : 1;
+    state.completedRounds = Number.isFinite(state.completedRounds)
+      ? clamp(Math.floor(state.completedRounds), 0, MAX_ROUNDS)
+      : clamp(Math.floor((Number(state.waveNumber) || 1) - 1), 0, MAX_ROUNDS);
     state.roundManaBonusPending = state.roundManaBonusPending && typeof state.roundManaBonusPending === "object"
       ? {
           player: Number.isFinite(state.roundManaBonusPending.player) ? state.roundManaBonusPending.player : 0,
@@ -1112,6 +1249,7 @@ function applyArtPack(artPackId, rerender = false) {
   activeArtPackId = ART_PACKS[normalizedArtPackId] ? normalizedArtPackId : DEFAULT_OPTIONS.artPack;
   activeArtPack = nextPack;
   towerSpritePaths = activeArtPack.towers;
+  towerFireSheetConfig = activeArtPack.towerFireSheets || {};
   attackerIconPaths = activeArtPack.attackerIcons;
   attackerSpriteConfig = activeArtPack.attackerSprites;
   attackerSprites = {};
@@ -1126,6 +1264,12 @@ function applyArtPack(artPackId, rerender = false) {
 
   if (rerender) {
     createCards();
+    if (pixiState.ready) {
+      buildPixiScene();
+      pixiState.lastTowerSignature = "";
+      pixiState.lastCardSignature = "";
+      pixiState.lastHudSignature = "";
+    }
     refreshAllUI();
   }
 }
@@ -1411,6 +1555,7 @@ function towerPowerScore(tower) {
 function resetMatch() {
   _battleResolving = false;
   state.waveNumber = 1;
+  state.completedRounds = 0;
   state.phase = "banner";
   state.phaseTimer = PREP_SECONDS;
   state.playerMana = 9;
@@ -1428,9 +1573,10 @@ function resetMatch() {
   state.attackersPlayer = [];
   state.attackersAI = [];
   state.projectiles = [];
-    state.fireBursts = [];
-    state.yellowLeaps = [];
+  state.fireBursts = [];
+  state.yellowLeaps = [];
   state.towerFlashes = [];
+  state.towerFireAnimations = [];
   state.deathParticles = [];
   state.nextUnitId = 1;
   state.nextProjectileId = 1;
@@ -1470,7 +1616,7 @@ function resetMatch() {
   previousTime = performance.now();
   updateStatus("Round 1 coming up.");
   refreshAllUI();
-  pauseBtnEl.textContent = "Pause";
+  syncPauseButtons();
 }
 
 function startNewMatch() {
@@ -1481,6 +1627,9 @@ function startNewMatch() {
   lockLandscapeOrientation();
   refreshAllUI();
 }
+
+window.setScreen = setScreen;
+window.startNewMatch = startNewMatch;
 
 function createTowerSlots() {
   enemySlotsEl.innerHTML = "";
@@ -1575,22 +1724,7 @@ function createCards() {
         startTouchDrag(event, `tower:${tower.id}`, "tower");
       });
     }
-    card.addEventListener("click", () => {
-      if (state.phase === "shop") {
-        state.shopSelectionType = "tower";
-        state.shopSelectionId = tower.id;
-        refreshAllUI();
-        return;
-      }
-      if (!isPlayerInputAllowed()) {
-        return;
-      }
-      selectedTowerId = selectedTowerId === tower.id ? null : tower.id;
-      refreshCardStates();
-      updateStatus(selectedTowerId
-        ? `Selected ${tower.name}. Tap an empty slot to place it.`
-        : "Tower selection cleared.");
-    });
+    card.addEventListener("click", () => onTowerCardActivated(tower));
     towerPanelEl.appendChild(card);
   }
 
@@ -1637,18 +1771,7 @@ function createCards() {
         startTouchDrag(event, `attacker:${attacker.id}`, "attacker");
       });
     }
-    card.addEventListener("click", () => {
-      if (state.phase === "shop") {
-        state.shopSelectionType = "attacker";
-        state.shopSelectionId = attacker.id;
-        refreshAllUI();
-        return;
-      }
-      if (!isPlayerInputAllowed()) {
-        return;
-      }
-      queuePlayerAttacker(attacker.id);
-    });
+    card.addEventListener("click", () => onAttackerCardActivated(attacker));
     attackerPanelEl.appendChild(card);
   }
 }
@@ -1781,6 +1904,12 @@ function placePlayerTower(slotIndex, towerId) {
   }
 
   const existingTower = state.playerTowers[slotIndex];
+  if (existingTower && existingTower.id !== towerDef.id) {
+    updateStatus(`Slot ${slotIndex + 1} is occupied. Choose an empty slot or upgrade the matching tower.`);
+    triggerPlacementHaptic("error");
+    return;
+  }
+
   if (existingTower && existingTower.id === towerDef.id && existingTower.level >= getTowerMaxLevel(towerDef.id)) {
     updateStatus(`${towerDef.name} tower is already at max level in slot ${slotIndex + 1}.`);
     triggerPlacementHaptic("error");
@@ -1890,6 +2019,7 @@ function refreshCardStates() {
     card.classList.toggle("upgraded", upgraded);
     card.dataset.queued = queued > 0 ? `x${queued}` : "";
   });
+  updatePixiCardStates();
 }
 
 function refreshTowerSlots() {
@@ -1917,6 +2047,15 @@ function refreshTowerSlots() {
     const aiTower = state.aiTowers[i];
     enemySlot.innerHTML = aiTower ? towerMarkup(aiTower) : "";
     enemySlot.classList.toggle("filled", !!aiTower);
+  }
+}
+
+function syncPauseButtons() {
+  const label = state.paused ? "Resume" : "Pause";
+  pauseBtnEl.textContent = label;
+  if (floatingPauseBtnEl) {
+    floatingPauseBtnEl.textContent = label;
+    floatingPauseBtnEl.hidden = state.screen !== "game" || state.gameOver || multiplayerRole !== null;
   }
 }
 
@@ -1951,9 +2090,14 @@ function refreshHUD() {
   const canSkipToBattle = !state.gameOver && !state.paused && state.phase === "prep" && !state.battleSkipUsedThisRound;
   battleSkipBtnEl.disabled = !canSkipToBattle;
   battleSkipBtnEl.hidden = state.screen !== "game" || !canSkipToBattle;
+  if (readyBtnEl) {
+    readyBtnEl.disabled = !canSkipToBattle;
+    readyBtnEl.hidden = state.screen !== "game" || !canSkipToBattle;
+    readyBtnEl.textContent = multiplayerRole !== null && state.battleSkipUsedThisRound ? "Waiting" : "Ready";
+  }
   // Pause is disabled in multiplayer — both players cannot pause a live match
   pauseBtnEl.hidden = multiplayerRole !== null;
-  pauseBtnEl.textContent = state.paused ? "Resume" : "Pause";
+  syncPauseButtons();
 }
 
 function refreshShopUI() {
@@ -2097,6 +2241,7 @@ function _doLaunchWave() {
   state.projectiles = [];
   state.fireBursts = [];
   state.towerFlashes = [];
+  state.towerFireAnimations = [];
   state.deathParticles = [];
 
   state.playerQueue = [];
@@ -2141,6 +2286,7 @@ document.addEventListener("contextmenu", preventBrowserGestures);
 document.addEventListener("pointerdown", unlockAudioFromGesture, { passive: true });
 
 function beginPrepPhase() {
+  clearTowerFireAnimations();
   state.phase = "prep";
   state.phaseTimer = PREP_SECONDS;
   state.aiDraftDone = false;
@@ -2158,6 +2304,7 @@ function beginPrepPhase() {
 }
 
 function beginRoundBanner() {
+  clearTowerFireAnimations();
   state.phase = "banner";
   state.roundBannerTimer = ROUND_BANNER_SECONDS;
   state.roundBannerText = `Round ${state.waveNumber}`;
@@ -2168,7 +2315,6 @@ function beginRoundBanner() {
 }
 
 function openRoundShop() {
-  console.warn(`[Game] advanceToNextRound called. waveNumber before increment=${state.waveNumber}`);
   const gain = 9 + state.waveNumber;
   state.playerMana = clamp(state.playerMana + gain, 0, MANA_CAP);
   state.aiMana = clamp(state.aiMana + gain + getAIManaBonusPerRound(), 0, MANA_CAP);
@@ -2213,7 +2359,7 @@ function buildMatchSummary() {
 }
 
 function finishMatch() {
-  console.warn(`[Game] finishMatch called. waveNumber=${state.waveNumber} playerScore=${state.playerScore} aiScore=${state.aiScore} multiplayerRole=${multiplayerRole}`);
+  clearTowerFireAnimations();
   state.phase = "gameover";
   state.gameOver = true;
   if (state.playerScore === state.aiScore) {
@@ -2256,14 +2402,15 @@ function onBattleFinished() {
     return;
   }
   _battleResolving = true;
-  console.warn(`[Game] onBattleFinished. wave=${state.waveNumber} multiplayerRole=${multiplayerRole}`);
+  clearTowerFireAnimations();
   const clearFlag = () => { _battleResolving = false; };
   if (multiplayerRole !== null && window.Lobby) {
     Promise.resolve(window.Lobby.onMultiplayerBattleFinished()).finally(clearFlag);
     return;
   }
   try {
-    if (state.waveNumber >= MAX_ROUNDS) {
+    state.completedRounds = clamp((Number(state.completedRounds) || 0) + 1, 0, MAX_ROUNDS);
+    if (state.completedRounds >= MAX_ROUNDS) {
       finishMatch();
       return;
     }
@@ -3086,6 +3233,24 @@ function spawnTowerFlash(pos, color) {
   });
 }
 
+function spawnTowerFireAnimation(owner, slotIndex, towerId) {
+  const cfg = towerFireSheetConfig[towerId];
+  if (!cfg) {
+    return;
+  }
+  const key = `${owner}:${slotIndex}`;
+  state.towerFireAnimations = state.towerFireAnimations.filter((anim) => anim.key !== key);
+  state.towerFireAnimations.push({
+    key,
+    owner,
+    slotIndex,
+    towerId,
+    life: cfg.duration || 0.24,
+    maxLife: cfg.duration || 0.24
+  });
+  pixiState.lastTowerSignature = "";
+}
+
 function spawnDeathParticles(unit) {
   const origin = attackerPosition(unit);
   const particleCount = 12;
@@ -3151,6 +3316,7 @@ function updateTowerFire(dt) {
       );
     }
     spawnTowerFlash(towerPosPlayer[i], tower.color);
+    spawnTowerFireAnimation("player", i, tower.id);
     if ((tower.id === "violet" || tower.id === "yellow" || tower.id === "red" || tower.id === "green" || tower.id === "blue") && state.soundCooldowns[tower.id] <= 0) {
       playTowerFireSfx(tower.id);
       state.soundCooldowns[tower.id] = tower.id === "blue" ? 0.08 : tower.id === "red" ? 0.075 : tower.id === "violet" ? 0.07 : 0.06;
@@ -3186,6 +3352,7 @@ function updateTowerFire(dt) {
       );
     }
     spawnTowerFlash(towerPosAI[i], tower.color);
+    spawnTowerFireAnimation("ai", i, tower.id);
     if ((tower.id === "violet" || tower.id === "yellow" || tower.id === "red" || tower.id === "green" || tower.id === "blue") && state.soundCooldowns[tower.id] <= 0) {
       playTowerFireSfx(tower.id);
       state.soundCooldowns[tower.id] = tower.id === "blue" ? 0.08 : tower.id === "red" ? 0.075 : tower.id === "violet" ? 0.07 : 0.06;
@@ -3294,6 +3461,29 @@ function updateTowerFlashes(dt) {
     }
   }
   state.towerFlashes = active;
+}
+
+function updateTowerFireAnimations(dt) {
+  const active = [];
+  for (const anim of state.towerFireAnimations) {
+    anim.life -= dt;
+    if (anim.life > 0) {
+      active.push(anim);
+    }
+  }
+  if (active.length !== state.towerFireAnimations.length) {
+    pixiState.lastTowerSignature = "";
+  }
+  state.towerFireAnimations = active;
+}
+
+function clearTowerFireAnimations() {
+  if (!state.towerFireAnimations.length) {
+    return;
+  }
+  state.towerFireAnimations = [];
+  pixiState.lastTowerSignature = "";
+  updatePixiTowers();
 }
 
 function updateYellowLeaps(dt) {
@@ -3458,6 +3648,7 @@ function updateGame(dt) {
   updateProjectiles(dt);
   updateFireBursts(dt);
   updateTowerFlashes(dt);
+  updateTowerFireAnimations(dt);
   updateYellowLeaps(dt);
   updateDeathParticles(dt);
 
@@ -3474,9 +3665,748 @@ function updateGame(dt) {
   }
 }
 
+function resizePixiRendererToLayout() {
+  if (!pixiState.app?.renderer || !gameFrameLayout.visibleLogicalWidth || !gameFrameLayout.visibleLogicalHeight) {
+    return;
+  }
+  const width = Math.max(1, Math.round(gameFrameLayout.visibleLogicalWidth));
+  const height = Math.max(1, Math.round(gameFrameLayout.visibleLogicalHeight));
+  if (pixiState.app.renderer.width !== width || pixiState.app.renderer.height !== height) {
+    pixiState.app.renderer.resize(width, height);
+  }
+  positionPixiScene();
+}
+
+function positionPixiScene() {
+  if (!pixiState.app) {
+    return;
+  }
+  const safeX = gameFrameLayout.safeOffsetLogicalX || 0;
+  const safeY = gameFrameLayout.safeOffsetLogicalY || 0;
+
+  if (pixiState.artboard) {
+    pixiState.artboard.x = safeX - SAFE_AREA_OFFSET_X;
+    pixiState.artboard.y = safeY - SAFE_AREA_OFFSET_Y;
+  }
+
+  for (const layer of [pixiState.markerLayer, pixiState.battlefieldLayer, pixiState.towerLayer, pixiState.dockIconLayer, pixiState.textLayer]) {
+    if (layer) {
+      layer.x = safeX;
+      layer.y = safeY;
+    }
+  }
+
+  if (pixiState.battlefieldMask) {
+    pixiState.battlefieldMask
+      .clear()
+      .rect(
+        safeX + BATTLEFIELD_BOUNDS.x,
+        safeY + BATTLEFIELD_BOUNDS.y,
+        BATTLEFIELD_BOUNDS.width,
+        BATTLEFIELD_BOUNDS.height
+      )
+      .fill(0xffffff);
+  }
+}
+
+function ensurePixiViewport() {
+  if (pixiState.app || !window.PIXI) {
+    return;
+  }
+  const host = document.getElementById("pixi-viewport");
+  if (!host) {
+    return;
+  }
+
+  const app = new PIXI.Application();
+  pixiState.app = app;
+  app.init({
+    width: LOGICAL_CANVAS_WIDTH,
+    height: LOGICAL_CANVAS_HEIGHT,
+    backgroundAlpha: 0,
+    antialias: false,
+    autoDensity: true,
+    resolution: Math.min(window.devicePixelRatio || 1, 2)
+  }).then(async () => {
+    host.innerHTML = "";
+    host.appendChild(app.canvas);
+    try {
+      await buildPixiScene();
+      pixiState.ready = true;
+      updatePixiCardStates(true);
+      document.documentElement.classList.remove("pixi-failed");
+    } catch (error) {
+      console.error("Unable to build Pixi scene", error);
+      document.documentElement.classList.add("pixi-failed");
+    }
+  }).catch((error) => {
+    console.error("Unable to initialize Pixi viewport", error);
+  });
+}
+
+function pixiText(text, style = {}) {
+  const node = new PIXI.Text({
+    text,
+    style: {
+      fontFamily: "Trebuchet MS, Segoe UI, sans-serif",
+      fontSize: 14,
+      fontWeight: "800",
+      fill: "#0f172a",
+      align: "center",
+      ...style
+    }
+  });
+  node.anchor.set(0.5);
+  return node;
+}
+
+function loadImageTexture(path) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        resolve(PIXI.Texture.from(img));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    img.onerror = () => reject(new Error(`Unable to load image asset: ${path}`));
+    img.src = path;
+  });
+}
+
+async function buildPixiScene() {
+  const { app } = pixiState;
+  if (!app) {
+    return;
+  }
+
+  app.stage.removeChildren();
+  const templateTextures = await Promise.all(
+    PIXI_TEMPLATE_LAYERS.map((filename) => loadImageTexture(`${PIXI_LAYER_ASSET_ROOT}/${filename}`))
+  );
+  const markerTexture = await loadImageTexture(BATTLEFIELD_TOWER_MARKER_PATH);
+  const towerTextures = {};
+  for (const [towerId, path] of Object.entries(towerSpritePaths)) {
+    towerTextures[towerId] = await loadImageTexture(path);
+  }
+  const towerFireTextures = {};
+  for (const [towerId, cfg] of Object.entries(towerFireSheetConfig)) {
+    towerFireTextures[towerId] = await loadImageTexture(cfg.path);
+  }
+  const attackerTextures = {};
+  for (const [attackerId, cfg] of Object.entries(attackerSpriteConfig)) {
+    attackerTextures[attackerId] = cfg ? await loadImageTexture(cfg.path) : null;
+  }
+  pixiState.towerTextures = towerTextures;
+  pixiState.towerFireTextures = towerFireTextures;
+  pixiState.attackerTextures = attackerTextures;
+
+  const artboard = new PIXI.Container();
+  pixiState.artboard = artboard;
+  app.stage.addChild(artboard);
+
+  for (const texture of templateTextures) {
+    const sprite = new PIXI.Sprite(texture);
+    sprite.x = 0;
+    sprite.y = 0;
+    sprite.width = ARTBOARD_WIDTH;
+    sprite.height = ARTBOARD_HEIGHT;
+    artboard.addChild(sprite);
+  }
+
+  const markerLayer = new PIXI.Container();
+  pixiState.markerLayer = markerLayer;
+  app.stage.addChild(markerLayer);
+  for (const pos of [...towerPosAI, ...towerPosPlayer]) {
+    addFittedSprite(
+      markerLayer,
+      markerTexture,
+      pos.x * LOGICAL_CANVAS_WIDTH,
+      pos.y * LOGICAL_CANVAS_HEIGHT,
+      BATTLEFIELD_TOWER_MARKER_SIZE,
+      BATTLEFIELD_TOWER_MARKER_SIZE
+    );
+  }
+
+  const battlefieldLayer = new PIXI.Container();
+  const battlefieldMask = new PIXI.Graphics();
+  battlefieldLayer.mask = battlefieldMask;
+  pixiState.battlefieldLayer = battlefieldLayer;
+  pixiState.battlefieldMask = battlefieldMask;
+  app.stage.addChild(battlefieldLayer);
+  app.stage.addChild(battlefieldMask);
+
+  pixiState.legacyTexture = PIXI.Texture.from(canvas);
+  pixiState.legacySprite = new PIXI.Sprite(pixiState.legacyTexture);
+  pixiState.legacySprite.x = 0;
+  pixiState.legacySprite.y = 0;
+  pixiState.legacySprite.width = LOGICAL_CANVAS_WIDTH;
+  pixiState.legacySprite.height = LOGICAL_CANVAS_HEIGHT;
+  battlefieldLayer.addChild(pixiState.legacySprite);
+
+  pixiState.towerLayer = new PIXI.Container();
+  app.stage.addChild(pixiState.towerLayer);
+
+  pixiState.dockIconLayer = new PIXI.Container();
+  app.stage.addChild(pixiState.dockIconLayer);
+
+  pixiState.textLayer = new PIXI.Container();
+  app.stage.addChild(pixiState.textLayer);
+
+  buildPixiDockCards();
+  buildPixiHudText();
+  resizePixiRendererToLayout();
+}
+
+function buildPixiHudText() {
+  pixiState.textLayer.removeChildren();
+  pixiState.timerFill = new PIXI.Graphics()
+    .roundRect(TIMER_FILL_RECT.x, TIMER_FILL_RECT.y, TIMER_FILL_RECT.width, TIMER_FILL_RECT.height, 3)
+    .fill({ color: 0x22c55e, alpha: 0.94 });
+  pixiState.timerMask = new PIXI.Graphics();
+  pixiState.timerFill.mask = pixiState.timerMask;
+  pixiState.textLayer.addChild(pixiState.timerFill);
+  pixiState.textLayer.addChild(pixiState.timerMask);
+
+  pixiState.hudText = {
+    round: pixiText("1", { fontSize: 18, fill: "#ffffff" }),
+    timer: pixiText("15.0", { fontSize: 18, fill: "#ffffff" }),
+    aiScore: pixiText("0", { fontSize: 18, fill: "#ffffff" }),
+    mana: pixiText("9", { fontSize: 24, fill: "#ffffff" }),
+    playerScore: pixiText("0", { fontSize: 18, fill: "#ffffff" })
+  };
+
+  pixiState.hudText.round.position.set(32, 215);
+  pixiState.hudText.timer.position.set(32, 384);
+  pixiState.hudText.aiScore.position.set(387, 228);
+  pixiState.hudText.mana.position.set(386, 304);
+  pixiState.hudText.playerScore.position.set(387, 378);
+
+  for (const node of Object.values(pixiState.hudText)) {
+    pixiState.textLayer.addChild(node);
+  }
+}
+
+function addFittedSprite(parent, texture, x, y, maxWidth, maxHeight, options = {}) {
+  const sprite = new PIXI.Sprite(texture);
+  sprite.anchor.set(0.5);
+  sprite.x = x;
+  sprite.y = y;
+  sprite.width = maxWidth;
+  sprite.height = maxHeight;
+  if (options.flipY) {
+    sprite.scale.y *= -1;
+  }
+  parent.addChild(sprite);
+  return sprite;
+}
+
+function addFittedSheetFrame(parent, texture, x, y, maxWidth, maxHeight, frameIndex, frameCount) {
+  const frame = new PIXI.Container();
+  frame.x = x;
+  frame.y = y;
+  const sprite = new PIXI.Sprite(texture);
+  sprite.x = -maxWidth / 2 - frameIndex * maxWidth;
+  sprite.y = -maxHeight / 2;
+  sprite.width = maxWidth * frameCount;
+  sprite.height = maxHeight;
+  const mask = new PIXI.Graphics()
+    .rect(-maxWidth / 2, -maxHeight / 2, maxWidth, maxHeight)
+    .fill(0xffffff);
+  frame.addChild(sprite);
+  frame.addChild(mask);
+  sprite.mask = mask;
+  parent.addChild(frame);
+  return frame;
+}
+
+function addSheetPreview(parent, attackerId, cfg, x, y, width, height) {
+  const frame = new PIXI.Container();
+  frame.x = x - width / 2;
+  frame.y = y - height / 2;
+  const mask = new PIXI.Graphics().rect(frame.x, frame.y, width, height).fill(0xffffff);
+  const sprite = new PIXI.Sprite(pixiState.attackerTextures[attackerId] || PIXI.Texture.EMPTY);
+  sprite.x = frame.x;
+  sprite.y = frame.y;
+  sprite.height = height;
+  sprite.width = width * (cfg.frames || 4);
+  parent.addChild(sprite);
+  parent.addChild(mask);
+  sprite.mask = mask;
+  return sprite;
+}
+
+function addPixiCardHitArea(parent, x, y, width, height, onTap, onPointerDown = null) {
+  const hitArea = new PIXI.Graphics()
+    .rect(x - width / 2, y - height / 2, width, height)
+    .fill({ color: 0xffffff, alpha: 0.001 });
+  hitArea.eventMode = "static";
+  hitArea.cursor = "pointer";
+  hitArea.on("pointertap", onTap);
+  if (onPointerDown) {
+    hitArea.on("pointerdown", onPointerDown);
+  }
+  parent.addChild(hitArea);
+  return hitArea;
+}
+
+function createPixiTowerDragGhost(tower) {
+  const ghostEl = document.createElement("div");
+  ghostEl.className = "pixi-drag-ghost";
+  ghostEl.innerHTML = `<img src="${towerSpritePaths[tower.id]}" alt="" />`;
+  ghostEl.style.position = "fixed";
+  ghostEl.style.width = `${TOWER_RENDER_BOX_WIDTH}px`;
+  ghostEl.style.height = `${TOWER_RENDER_BOX_HEIGHT}px`;
+  ghostEl.style.opacity = "0.62";
+  ghostEl.style.pointerEvents = "none";
+  ghostEl.style.zIndex = "9999";
+  ghostEl.style.transform = "translate(-50%, -50%)";
+  ghostEl.style.filter = "drop-shadow(0 8px 14px rgba(2, 6, 23, 0.45))";
+  const img = ghostEl.querySelector("img");
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "contain";
+  document.body.appendChild(ghostEl);
+  return ghostEl;
+}
+
+function getPixiPointerClientPosition(event) {
+  if (Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
+    return { x: event.clientX, y: event.clientY };
+  }
+  const canvasRect = pixiState.app?.canvas?.getBoundingClientRect();
+  if (!canvasRect || !event.global) {
+    return { x: 0, y: 0 };
+  }
+  const scaleX = canvasRect.width / Math.max(1, pixiState.app.renderer.width);
+  const scaleY = canvasRect.height / Math.max(1, pixiState.app.renderer.height);
+  return {
+    x: canvasRect.left + event.global.x * scaleX,
+    y: canvasRect.top + event.global.y * scaleY
+  };
+}
+
+function updatePixiTowerDragGhost(clientX, clientY) {
+  if (!pixiTowerDragState?.ghostEl) {
+    return;
+  }
+  pixiTowerDragState.ghostEl.style.left = `${clientX}px`;
+  pixiTowerDragState.ghostEl.style.top = `${clientY}px`;
+}
+
+function startPixiTowerPointer(event, tower) {
+  if (!isPlayerInputAllowed()) {
+    return;
+  }
+  if (state.playerMana < tower.cost) {
+    updateStatus("Not enough mana for that tower.");
+    triggerPlacementHaptic("error");
+    return;
+  }
+  const client = getPixiPointerClientPosition(event);
+  pixiTowerDragState = {
+    pointerId: event.pointerId,
+    tower,
+    startX: client.x,
+    startY: client.y,
+    hasMoved: false,
+    ghostEl: null
+  };
+  document.addEventListener("pointermove", onPixiTowerPointerMove, { passive: false });
+  document.addEventListener("pointerup", onPixiTowerPointerEnd, { passive: false });
+  document.addEventListener("pointercancel", onPixiTowerPointerCancel, { passive: false });
+}
+
+function onPixiTowerPointerMove(event) {
+  if (!pixiTowerDragState || event.pointerId !== pixiTowerDragState.pointerId) {
+    return;
+  }
+  const dx = event.clientX - pixiTowerDragState.startX;
+  const dy = event.clientY - pixiTowerDragState.startY;
+  if (!pixiTowerDragState.hasMoved && Math.hypot(dx, dy) < 6) {
+    return;
+  }
+  event.preventDefault();
+  pixiTowerDragState.hasMoved = true;
+  if (!pixiTowerDragState.ghostEl) {
+    pixiTowerDragState.ghostEl = createPixiTowerDragGhost(pixiTowerDragState.tower);
+    activeDragPayload = `tower:${pixiTowerDragState.tower.id}`;
+  }
+  updatePixiTowerDragGhost(event.clientX, event.clientY);
+  clearTouchDragHighlights();
+  const slotEl = document.elementFromPoint(event.clientX, event.clientY)?.closest(".tower-slot.player");
+  if (slotEl && isPlayerInputAllowed()) {
+    slotEl.classList.add("over");
+  }
+}
+
+function finishPixiTowerPointer(clientX, clientY, shouldApplyDrop) {
+  if (!pixiTowerDragState) {
+    return;
+  }
+  const dragState = pixiTowerDragState;
+  if (dragState.ghostEl?.parentNode) {
+    dragState.ghostEl.parentNode.removeChild(dragState.ghostEl);
+  }
+  clearTouchDragHighlights();
+  if (dragState.hasMoved) {
+    suppressNextPixiTowerTap = true;
+    window.setTimeout(() => {
+      suppressNextPixiTowerTap = false;
+    }, 0);
+  }
+  if (shouldApplyDrop && dragState.hasMoved && isPlayerInputAllowed()) {
+    const slotEl = document.elementFromPoint(clientX, clientY)?.closest(".tower-slot.player");
+    if (slotEl) {
+      const slotIndex = Number(slotEl.dataset.slotIndex);
+      if (Number.isInteger(slotIndex)) {
+        placePlayerTower(slotIndex, dragState.tower.id);
+      }
+    }
+  }
+  pixiTowerDragState = null;
+  activeDragPayload = "";
+  document.removeEventListener("pointermove", onPixiTowerPointerMove);
+  document.removeEventListener("pointerup", onPixiTowerPointerEnd);
+  document.removeEventListener("pointercancel", onPixiTowerPointerCancel);
+}
+
+function onPixiTowerPointerEnd(event) {
+  if (!pixiTowerDragState || event.pointerId !== pixiTowerDragState.pointerId) {
+    return;
+  }
+  finishPixiTowerPointer(event.clientX, event.clientY, true);
+}
+
+function onPixiTowerPointerCancel(event) {
+  if (!pixiTowerDragState || event.pointerId !== pixiTowerDragState.pointerId) {
+    return;
+  }
+  finishPixiTowerPointer(event.clientX, event.clientY, false);
+}
+
+function onTowerCardActivated(tower) {
+  if (suppressNextPixiTowerTap) {
+    suppressNextPixiTowerTap = false;
+    return;
+  }
+  if (state.phase === "shop") {
+    state.shopSelectionType = "tower";
+    state.shopSelectionId = tower.id;
+    refreshAllUI();
+    return;
+  }
+  if (!isPlayerInputAllowed()) {
+    return;
+  }
+  if (state.playerMana < tower.cost) {
+    updateStatus("Not enough mana for that tower.");
+    triggerPlacementHaptic("error");
+    return;
+  }
+  selectedTowerId = selectedTowerId === tower.id ? null : tower.id;
+  refreshCardStates();
+  updateStatus(selectedTowerId
+    ? `Selected ${tower.name}. Tap an empty slot to place it.`
+    : "Tower selection cleared.");
+}
+
+function onAttackerCardActivated(attacker) {
+  if (state.phase === "shop") {
+    state.shopSelectionType = "attacker";
+    state.shopSelectionId = attacker.id;
+    refreshAllUI();
+    return;
+  }
+  if (!isPlayerInputAllowed()) {
+    return;
+  }
+  if (state.playerMana < attacker.cost) {
+    updateStatus("Not enough mana for that attacker.");
+    triggerPlacementHaptic("error");
+    return;
+  }
+  flashPixiCard("attacker", attacker.id);
+  queuePlayerAttacker(attacker.id);
+}
+
+function buildPixiDockCards() {
+  pixiState.dockIconLayer.removeChildren();
+  pixiState.cardSprites = [];
+  pixiState.cardText = [];
+  pixiState.cardEntries = [];
+
+  const towerOrder = towerDefs.slice().reverse();
+  towerOrder.forEach((tower, index) => {
+    const center = TOWER_CARD_CENTERS[index];
+    const x = center.x - SAFE_AREA_OFFSET_X - 5;
+    const y = center.y - SAFE_AREA_OFFSET_Y;
+    const sprite = addFittedSprite(pixiState.dockIconLayer, pixiState.towerTextures[tower.id], x, y, 58, 70);
+    pixiState.cardSprites.push(sprite);
+    const costText = pixiText(String(tower.cost), { fontSize: 15, fill: "#111827" });
+    costText.position.set(center.x - SAFE_AREA_OFFSET_X + 24, center.y - SAFE_AREA_OFFSET_Y + 18);
+    pixiState.dockIconLayer.addChild(costText);
+    pixiState.cardText.push(costText);
+    const overlay = new PIXI.Graphics()
+      .roundRect(center.x - SAFE_AREA_OFFSET_X - 37, center.y - SAFE_AREA_OFFSET_Y - 39, 74, 78, 2)
+      .fill({ color: 0x5b6472, alpha: 0.58 });
+    overlay.eventMode = "none";
+    overlay.visible = false;
+    pixiState.dockIconLayer.addChild(overlay);
+    const flash = createPixiCardFlash(center.x - SAFE_AREA_OFFSET_X, center.y - SAFE_AREA_OFFSET_Y, 74, 78);
+    pixiState.dockIconLayer.addChild(flash);
+    const selection = createPixiCardSelection(center.x - SAFE_AREA_OFFSET_X, center.y - SAFE_AREA_OFFSET_Y, 74, 78);
+    pixiState.dockIconLayer.addChild(selection);
+    pixiState.cardEntries.push({ type: "tower", id: tower.id, manaCost: tower.cost, sprite, costText, overlay, flash, selection });
+    addPixiCardHitArea(pixiState.dockIconLayer, center.x - SAFE_AREA_OFFSET_X, center.y - SAFE_AREA_OFFSET_Y, 74, 78, () => {
+      onTowerCardActivated(tower);
+    }, (event) => {
+      startPixiTowerPointer(event, tower);
+    });
+  });
+
+  attackerDefs.forEach((attacker, index) => {
+    const center = CREEP_CARD_CENTERS[index];
+    const x = center.x - SAFE_AREA_OFFSET_X - 5;
+    const y = center.y - SAFE_AREA_OFFSET_Y;
+    const cfg = attackerSpriteConfig[attacker.id];
+    let sprite = null;
+    if (cfg) {
+      sprite = addSheetPreview(pixiState.dockIconLayer, attacker.id, cfg, x, y, 58, 58);
+    }
+    const costText = pixiText(String(attacker.cost), { fontSize: 15, fill: "#111827" });
+    costText.position.set(center.x - SAFE_AREA_OFFSET_X + 24, center.y - SAFE_AREA_OFFSET_Y + 18);
+    pixiState.dockIconLayer.addChild(costText);
+    pixiState.cardText.push(costText);
+    const overlay = new PIXI.Graphics()
+      .roundRect(center.x - SAFE_AREA_OFFSET_X - 37, center.y - SAFE_AREA_OFFSET_Y - 32, 74, 64, 2)
+      .fill({ color: 0x5b6472, alpha: 0.58 });
+    overlay.eventMode = "none";
+    overlay.visible = false;
+    pixiState.dockIconLayer.addChild(overlay);
+    const flash = createPixiCardFlash(center.x - SAFE_AREA_OFFSET_X, center.y - SAFE_AREA_OFFSET_Y, 74, 64);
+    pixiState.dockIconLayer.addChild(flash);
+    const selection = createPixiCardSelection(center.x - SAFE_AREA_OFFSET_X, center.y - SAFE_AREA_OFFSET_Y, 74, 64);
+    pixiState.dockIconLayer.addChild(selection);
+    const queueText = pixiText("", {
+      fontSize: 21,
+      fill: "#ffffff",
+      stroke: { color: "#0f172a", width: 4 }
+    });
+    queueText.position.set(center.x - SAFE_AREA_OFFSET_X, center.y - SAFE_AREA_OFFSET_Y - 2);
+    queueText.visible = false;
+    pixiState.dockIconLayer.addChild(queueText);
+    pixiState.cardEntries.push({ type: "attacker", id: attacker.id, manaCost: attacker.cost, sprite, costText, overlay, flash, selection, queueText });
+    addPixiCardHitArea(pixiState.dockIconLayer, center.x - SAFE_AREA_OFFSET_X, center.y - SAFE_AREA_OFFSET_Y, 74, 64, () => {
+      onAttackerCardActivated(attacker);
+    });
+  });
+  updatePixiCardStates(true);
+}
+
+function createPixiCardFlash(x, y, width, height) {
+  const flash = new PIXI.Graphics()
+    .roundRect(x - width / 2, y - height / 2, width, height, 2)
+    .fill({ color: 0xffffff, alpha: 0.44 })
+    .stroke({ color: 0xffffff, width: 2, alpha: 0.9 });
+  flash.eventMode = "none";
+  flash.visible = false;
+  return flash;
+}
+
+function createPixiCardSelection(x, y, width, height) {
+  const selection = new PIXI.Graphics()
+    .roundRect(x - width / 2, y - height / 2, width, height, 2)
+    .stroke({ color: 0xfff7c2, width: 3, alpha: 0.95 });
+  selection.eventMode = "none";
+  selection.visible = false;
+  return selection;
+}
+
+function flashPixiCard(type, id) {
+  const entry = pixiState.cardEntries.find((item) => item.type === type && item.id === id);
+  if (!entry?.flash) {
+    return;
+  }
+  if (entry.flashTimeouts) {
+    for (const timeoutId of entry.flashTimeouts) {
+      window.clearTimeout(timeoutId);
+    }
+  }
+  entry.flash.visible = true;
+  entry.flash.alpha = 1;
+  entry.flashTimeouts = [
+    window.setTimeout(() => {
+      entry.flash.visible = false;
+    }, 85),
+    window.setTimeout(() => {
+      entry.flash.visible = true;
+      entry.flash.alpha = 0.72;
+    }, 145),
+    window.setTimeout(() => {
+      entry.flash.visible = false;
+      entry.flash.alpha = 1;
+      entry.flashTimeouts = null;
+    }, 230)
+  ];
+}
+
+function updatePixiTimerFill() {
+  if (!pixiState.ready || !pixiState.timerFill || !pixiState.timerMask) {
+    return;
+  }
+  const ratio = state.phase === "prep" ? clamp(state.phaseTimer / PREP_SECONDS, 0, 1) : 0;
+  const visibleHeight = TIMER_FILL_RECT.height * ratio;
+  const visibleY = TIMER_FILL_RECT.y + TIMER_FILL_RECT.height - visibleHeight;
+  pixiState.timerFill.visible = ratio > 0;
+  pixiState.timerMask
+    .clear()
+    .rect(TIMER_FILL_RECT.x, visibleY, TIMER_FILL_RECT.width, visibleHeight)
+    .fill(0xffffff);
+}
+
+function updatePixiCardStates(force = false) {
+  if (!pixiState.ready || !pixiState.cardEntries.length) {
+    return;
+  }
+  const signature = [
+    state.phase,
+    state.playerMana,
+    selectedTowerId || "",
+    state.shopSelectionType || "",
+    state.shopSelectionId || "",
+    JSON.stringify(state.playerQueueCounts || {}),
+    isPlayerInputAllowed() ? "input" : "locked"
+  ].join("|");
+  if (!force && signature === pixiState.lastCardSignature) {
+    return;
+  }
+  pixiState.lastCardSignature = signature;
+
+  for (const entry of pixiState.cardEntries) {
+    const inShop = state.phase === "shop";
+    const affordable = inShop || (isPlayerInputAllowed() && state.playerMana >= entry.manaCost);
+    if (entry.sprite) {
+      entry.sprite.alpha = affordable ? 1 : 0.34;
+      entry.sprite.tint = affordable ? 0xffffff : 0x8b93a0;
+    }
+    if (entry.costText) {
+      entry.costText.alpha = affordable ? 1 : 0.48;
+      entry.costText.style.fill = affordable ? "#111827" : "#475569";
+    }
+    if (entry.overlay) {
+      entry.overlay.visible = !affordable;
+    }
+    if (entry.selection) {
+      entry.selection.visible = entry.type === "tower"
+        ? (inShop
+          ? state.shopSelectionType === "tower" && state.shopSelectionId === entry.id
+          : selectedTowerId === entry.id)
+        : inShop && state.shopSelectionType === "attacker" && state.shopSelectionId === entry.id;
+    }
+    if (entry.queueText) {
+      const queued = state.playerQueueCounts[entry.id] || 0;
+      entry.queueText.text = queued > 0 ? `x${queued}` : "";
+      entry.queueText.visible = !inShop && queued > 0;
+    }
+  }
+}
+
+function updatePixiHudText() {
+  if (!pixiState.ready) {
+    return;
+  }
+  const signature = [
+    state.waveNumber,
+    state.phase,
+    state.phaseTimer.toFixed(1),
+    state.playerMana,
+    state.playerScore,
+    state.aiScore
+  ].join("|");
+  if (signature === pixiState.lastHudSignature) {
+    return;
+  }
+  pixiState.lastHudSignature = signature;
+  pixiState.hudText.round.text = String(state.waveNumber);
+  pixiState.hudText.timer.text = phaseTimerEl.textContent || state.phaseTimer.toFixed(1);
+  pixiState.hudText.aiScore.text = String(state.aiScore);
+  pixiState.hudText.mana.text = String(state.playerMana);
+  pixiState.hudText.playerScore.text = String(state.playerScore);
+}
+
+function updatePixiTowers() {
+  if (!pixiState.ready) {
+    return;
+  }
+  const signature = JSON.stringify({
+    player: state.playerTowers.map((tower) => tower ? `${tower.id}:${tower.level || 1}` : ""),
+    ai: state.aiTowers.map((tower) => tower ? `${tower.id}:${tower.level || 1}` : ""),
+    fire: state.towerFireAnimations.map((anim) => `${anim.key}:${anim.towerId}:${anim.life.toFixed(2)}`)
+  });
+  if (signature === pixiState.lastTowerSignature) {
+    return;
+  }
+  pixiState.lastTowerSignature = signature;
+  pixiState.towerLayer.removeChildren();
+
+  const activeFireAnimations = new Map(state.towerFireAnimations.map((anim) => [anim.key, anim]));
+
+  const drawTowerSprite = (tower, pos, options = {}) => {
+    if (!tower) {
+      return;
+    }
+    const levelScale = Math.max(1, Number(tower.level) || 1) > 1 ? 1.16 : 1;
+    const fireAnim = options.fireKey ? activeFireAnimations.get(options.fireKey) : null;
+    const fireCfg = fireAnim ? towerFireSheetConfig[tower.id] : null;
+    if (fireAnim && fireCfg && pixiState.towerFireTextures[tower.id]) {
+      const frameCount = fireCfg.frames || 4;
+      const progress = clamp(1 - fireAnim.life / fireAnim.maxLife, 0, 0.999);
+      const frameIndex = Math.min(frameCount - 1, Math.floor(progress * frameCount));
+      addFittedSheetFrame(
+        pixiState.towerLayer,
+        pixiState.towerFireTextures[tower.id],
+        pos.x * LOGICAL_CANVAS_WIDTH,
+        pos.y * LOGICAL_CANVAS_HEIGHT + (options.yOffset || 0),
+        TOWER_RENDER_BOX_WIDTH * levelScale,
+        TOWER_RENDER_BOX_HEIGHT * levelScale,
+        frameIndex,
+        frameCount
+      );
+      return;
+    }
+    addFittedSprite(
+      pixiState.towerLayer,
+      pixiState.towerTextures[tower.id],
+      pos.x * LOGICAL_CANVAS_WIDTH,
+      pos.y * LOGICAL_CANVAS_HEIGHT + (options.yOffset || 0),
+      TOWER_RENDER_BOX_WIDTH * levelScale,
+      TOWER_RENDER_BOX_HEIGHT * levelScale,
+      { flipY: !!options.flipY }
+    );
+  };
+
+  for (let i = 0; i < 5; i += 1) {
+    drawTowerSprite(state.aiTowers[i], towerPosAI[i], { fireKey: `ai:${i}` });
+    drawTowerSprite(state.playerTowers[i], towerPosPlayer[i], { yOffset: -6, fireKey: `player:${i}` });
+  }
+}
+
+function updatePixiDynamicTexture() {
+  if (!pixiState.ready || !pixiState.legacyTexture) {
+    return;
+  }
+  pixiState.legacyTexture.source.update();
+}
+
 function drawLane() {
   const w = canvas.width;
   const h = canvas.height;
+  if (pixiState.ready) {
+    ctx.clearRect(0, 0, w, h);
+    return;
+  }
   if (battlefieldBackgroundImage.complete && battlefieldBackgroundImage.naturalWidth > 0) {
     ctx.drawImage(battlefieldBackgroundImage, 0, 0, w, h);
     return;
@@ -3902,6 +4832,7 @@ function drawRoundBanner() {
 }
 
 function drawBoard() {
+  ensurePixiViewport();
   drawLane();
   drawTowerRanges();
   drawTankCreepRanges();
@@ -3913,6 +4844,11 @@ function drawBoard() {
   drawTowerFlashes();
   drawDeathParticles();
   drawRoundBanner();
+  updatePixiDynamicTexture();
+  updatePixiTowers();
+  updatePixiTimerFill();
+  updatePixiCardStates();
+  updatePixiHudText();
 }
 
 let previousTime = performance.now();
@@ -3948,14 +4884,19 @@ replayBtnEl.addEventListener("click", () => {
   returnToMenuFromMatch();
 });
 
-battleSkipBtnEl.addEventListener("click", () => {
+function submitReadyForBattle() {
   if (state.phase !== "prep" || state.gameOver || state.paused || state.battleSkipUsedThisRound) {
     return;
   }
   state.battleSkipUsedThisRound = true;
   state.phaseTimer = 0;
+  refreshHUD();
+  updateStatus(multiplayerRole !== null ? "Ready. Waiting for opponent..." : "Ready. Starting battle.");
   launchWave();
-});
+}
+
+battleSkipBtnEl.addEventListener("click", submitReadyForBattle);
+readyBtnEl?.addEventListener("click", submitReadyForBattle);
 
 shopUpgradeBtnEl.addEventListener("click", () => {
   if (state.shopSelectionType === "tower") {
@@ -3976,19 +4917,22 @@ shopStartBtnEl.addEventListener("click", () => {
   beginRoundBanner();
 });
 
-pauseBtnEl.addEventListener("click", () => {
+function togglePause() {
   if (state.gameOver || state.phase === "shop" || state.phase === "banner") {
     return;
   }
   state.paused = !state.paused;
-  pauseBtnEl.textContent = state.paused ? "Resume" : "Pause";
+  syncPauseButtons();
   saveMatchStateNow();
   if (state.paused) {
     updateStatus("Paused.");
   } else {
     updateStatus(state.phase === "prep" ? "Prep resumed." : "Battle resumed.");
   }
-});
+}
+
+pauseBtnEl.addEventListener("click", togglePause);
+floatingPauseBtnEl?.addEventListener("click", togglePause);
 
 playMatchBtnEl.addEventListener("click", () => {
   startNewMatch();

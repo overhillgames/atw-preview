@@ -1090,8 +1090,8 @@ select {
 
 .floating-pause-btn {
   position: absolute;
-  right: max(0.35rem, calc(var(--safe-frame-x) + 0.35rem));
-  top: calc(var(--safe-frame-y) + (var(--pixi-safe-height) * 0.62));
+  right: max(calc(0.35rem + 3px), calc(var(--safe-frame-x) + 0.35rem + 3px));
+  top: calc(var(--safe-frame-y) + (var(--pixi-safe-height) * 0.62) - 50px);
   z-index: 30;
   min-height: 28px;
   padding: 0.25rem 0.45rem;

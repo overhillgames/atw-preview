@@ -8,6 +8,7 @@ const TOWER_UPGRADE_COST = 5;
 const ATTACKER_UPGRADE_MULTIPLIER = 1.1;
 const TOWER_UPGRADE_MULTIPLIER = 1.2;
 const MAX_TOWER_UPGRADES = 2;
+const SHOW_RANGE_ARCS = false;
 const STATS_STORAGE_KEY = "bline-tower-wars-match-stats";
 const MATCH_STATE_STORAGE_KEY = "line-tower-wars-active-match";
 const OPTIONS_STORAGE_KEY = "bline-tower-wars-options";
@@ -20,13 +21,15 @@ let opponentAttackerUpgrades = {};     // loaded from Firebase before each battl
 const BASE_TOWER_CONE_DEGREES = 130;
 const LOGICAL_CANVAS_WIDTH = 420;
 const LOGICAL_CANVAS_HEIGHT = 760;
-const ARTBOARD_WIDTH = 630;
-const ARTBOARD_HEIGHT = 860;
-const SAFE_AREA_OFFSET_X = 105;
-const SAFE_AREA_OFFSET_Y = 50;
+let ARTBOARD_WIDTH = 630;
+let ARTBOARD_HEIGHT = 860;
+let SAFE_AREA_OFFSET_X = 105;
+let SAFE_AREA_OFFSET_Y = 50;
 const BATTLEFIELD_BOUNDS = { x: 10, y: 20, width: 400, height: 570 };
-const PIXI_LAYER_ASSET_ROOT = "assets/battlefield-template-v3";
-const PIXI_TEMPLATE_LAYERS = [
+let PIXI_LAYER_ASSET_ROOT = "assets/battlefield-template-v3";
+let PIXI_HIGH_Z_LAYER = null;
+let PIXI_TIMER_FILL_LAYER = null;
+const DEFAULT_PIXI_TEMPLATE_LAYERS = [
   "01_bleed_area.png",
   "02_safe_area.png",
   "03_battlefield.png",
@@ -39,25 +42,28 @@ const PIXI_TEMPLATE_LAYERS = [
   "10_tower_card_frames.png",
   "12_creep_card_frames.png"
 ];
-const BATTLEFIELD_TOWER_MARKER_PATH = "assets/ui/markers/battlefield-tower-marker.png";
-const BATTLEFIELD_TOWER_MARKER_SIZE = 48;
+let PIXI_TEMPLATE_LAYERS = [...DEFAULT_PIXI_TEMPLATE_LAYERS];
+let BATTLEFIELD_TOWER_MARKER_PATH = "assets/ui/markers/battlefield-tower-marker.png";
+let BATTLEFIELD_TOWER_MARKER_SIZE = 48;
 const TOWER_RENDER_BOX_WIDTH = 64;
 const TOWER_RENDER_BOX_HEIGHT = 78;
-const TOWER_CARD_CENTERS = [
+const DEFAULT_TOWER_CARD_CENTERS = [
   { x: 161, y: 691 },
   { x: 237, y: 691 },
   { x: 313, y: 691 },
   { x: 389, y: 691 },
   { x: 465, y: 691 }
 ];
-const CREEP_CARD_CENTERS = [
+const DEFAULT_CREEP_CARD_CENTERS = [
   { x: 161, y: 772 },
   { x: 237, y: 772 },
   { x: 313, y: 772 },
   { x: 389, y: 772 },
   { x: 465, y: 772 }
 ];
-const TIMER_FILL_RECT = { x: 22, y: 238, width: 20, height: 122 };
+let TOWER_CARD_CENTERS = [...DEFAULT_TOWER_CARD_CENTERS];
+let CREEP_CARD_CENTERS = [...DEFAULT_CREEP_CARD_CENTERS];
+let TIMER_FILL_RECT = { x: 22, y: 238, width: 20, height: 122 };
 
 const towerDefs = [
   { id: "violet", name: "Violet", cost: 2, damage: 2, range: 0.416, fireRate: 0.935, color: "#7c3aed", coneDegrees: 220, maxTargets: 1 },
@@ -228,12 +234,59 @@ const ART_PACKS = {
   },
   unfuneralOD: {
     battlefield: "assets/unfuneralod/arena/arena2.png",
+    pixiTemplate: {
+      assetRoot: "assets/unfuneralod/battlefield-template-v4",
+      artboardWidth: 1260,
+      artboardHeight: 1000,
+      safeOffsetX: 420,
+      safeOffsetY: 180,
+      layers: [
+        "01_bleed_area.png",
+        "02_safe_area.png",
+        "03_battlefield.png",
+        "04_tower_dock.png",
+        "05_creep_dock.png",
+        "06_timer_round_panel.png",
+        "07_timer_round_containers.png",
+        "08_score_mana_panel.png",
+        "09_score_mana_containers.png",
+        "10_tower_card_frames.png",
+        "12_creep_card_frames.png",
+        "17_ready_(skips_timer).png"
+      ],
+      highZLayer: "18_safe_area_high_z.png",
+      timerFillLayer: "16_timer_fill_rect_24x122.png",
+      markerPath: "assets/unfuneralod/markers/battlefield-tower-position.png",
+      markerSize: 48,
+      timerFillRect: { x: 22, y: 201, width: 21, height: 166 },
+      towerCardCenters: [
+        { x: 477, y: 821 },
+        { x: 553, y: 821 },
+        { x: 629, y: 821 },
+        { x: 705, y: 821 },
+        { x: 781, y: 821 }
+      ],
+      creepCardCenters: [
+        { x: 477, y: 902 },
+        { x: 553, y: 902 },
+        { x: 629, y: 902 },
+        { x: 705, y: 902 },
+        { x: 781, y: 902 }
+      ]
+    },
     towers: {
       violet: "assets/unfuneralod/towers/violet.png",
       yellow: "assets/unfuneralod/towers/yellow.png",
       red: "assets/unfuneralod/towers/red.png",
       green: "assets/unfuneralod/towers/green.png",
       blue: "assets/unfuneralod/towers/blue.png"
+    },
+    towerFireSheets: {
+      violet: { path: "assets/unfuneralod/towers/sheets/violet-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 },
+      yellow: { path: "assets/unfuneralod/towers/sheets/yellow-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 },
+      red: { path: "assets/unfuneralod/towers/sheets/red-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 },
+      green: { path: "assets/unfuneralod/towers/sheets/green-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 },
+      blue: { path: "assets/unfuneralod/towers/sheets/blue-fire.png", frameWidth: 64, frameHeight: 78, frames: 4, duration: 0.24 }
     },
     attackerIcons: {
       imp: null,
@@ -261,7 +314,7 @@ const attackerDefs = [
 ];
 const DEFAULT_OPTIONS = {
   difficulty: "yellow",
-  artPack: "classic"
+  artPack: "unfuneralOD"
 };
 const ART_PACK_OPTIONS = [
   { id: "classic", name: "Classic", unlocked: true, preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
@@ -522,12 +575,14 @@ const pixiState = {
   artboard: null,
   battlefieldLayer: null,
   battlefieldMask: null,
+  highZLayer: null,
   markerLayer: null,
   uiLayer: null,
   towerLayer: null,
   dockIconLayer: null,
   textLayer: null,
   timerFill: null,
+  timerFillSprite: null,
   timerMask: null,
   legacyTexture: null,
   legacySprite: null,
@@ -1243,11 +1298,28 @@ function refreshArtOptionsUI() {
   }
 }
 
+function applyPixiTemplate(template = {}) {
+  ARTBOARD_WIDTH = template.artboardWidth || 630;
+  ARTBOARD_HEIGHT = template.artboardHeight || 860;
+  SAFE_AREA_OFFSET_X = template.safeOffsetX || 105;
+  SAFE_AREA_OFFSET_Y = template.safeOffsetY || 50;
+  PIXI_LAYER_ASSET_ROOT = template.assetRoot || "assets/battlefield-template-v3";
+  PIXI_TEMPLATE_LAYERS = template.layers ? [...template.layers] : [...DEFAULT_PIXI_TEMPLATE_LAYERS];
+  PIXI_HIGH_Z_LAYER = template.highZLayer || null;
+  PIXI_TIMER_FILL_LAYER = template.timerFillLayer || null;
+  BATTLEFIELD_TOWER_MARKER_PATH = template.markerPath || "assets/ui/markers/battlefield-tower-marker.png";
+  BATTLEFIELD_TOWER_MARKER_SIZE = template.markerSize || 48;
+  TOWER_CARD_CENTERS = template.towerCardCenters ? template.towerCardCenters.map((center) => ({ ...center })) : [...DEFAULT_TOWER_CARD_CENTERS];
+  CREEP_CARD_CENTERS = template.creepCardCenters ? template.creepCardCenters.map((center) => ({ ...center })) : [...DEFAULT_CREEP_CARD_CENTERS];
+  TIMER_FILL_RECT = template.timerFillRect ? { ...template.timerFillRect } : { x: 22, y: 238, width: 20, height: 122 };
+}
+
 function applyArtPack(artPackId, rerender = false) {
   const normalizedArtPackId = normalizeArtPackId(artPackId);
   const nextPack = ART_PACKS[normalizedArtPackId] || ART_PACKS[DEFAULT_OPTIONS.artPack];
   activeArtPackId = ART_PACKS[normalizedArtPackId] ? normalizedArtPackId : DEFAULT_OPTIONS.artPack;
   activeArtPack = nextPack;
+  applyPixiTemplate(activeArtPack.pixiTemplate);
   towerSpritePaths = activeArtPack.towers;
   towerFireSheetConfig = activeArtPack.towerFireSheets || {};
   attackerIconPaths = activeArtPack.attackerIcons;
@@ -3700,6 +3772,11 @@ function positionPixiScene() {
     pixiState.artboard.y = safeY - SAFE_AREA_OFFSET_Y;
   }
 
+  if (pixiState.highZLayer) {
+    pixiState.highZLayer.x = safeX - SAFE_AREA_OFFSET_X;
+    pixiState.highZLayer.y = safeY - SAFE_AREA_OFFSET_Y;
+  }
+
   for (const layer of [pixiState.markerLayer, pixiState.battlefieldLayer, pixiState.towerLayer, pixiState.dockIconLayer, pixiState.textLayer]) {
     if (layer) {
       layer.x = safeX;
@@ -3796,6 +3873,8 @@ async function buildPixiScene() {
   const templateTextures = await Promise.all(
     PIXI_TEMPLATE_LAYERS.map((filename) => loadImageTexture(`${PIXI_LAYER_ASSET_ROOT}/${filename}`))
   );
+  const highZTexture = PIXI_HIGH_Z_LAYER ? await loadImageTexture(`${PIXI_LAYER_ASSET_ROOT}/${PIXI_HIGH_Z_LAYER}`) : null;
+  const timerFillTexture = PIXI_TIMER_FILL_LAYER ? await loadImageTexture(`${PIXI_LAYER_ASSET_ROOT}/${PIXI_TIMER_FILL_LAYER}`) : null;
   const markerTexture = await loadImageTexture(BATTLEFIELD_TOWER_MARKER_PATH);
   const towerTextures = {};
   for (const [towerId, path] of Object.entries(towerSpritePaths)) {
@@ -3859,6 +3938,17 @@ async function buildPixiScene() {
   pixiState.towerLayer = new PIXI.Container();
   app.stage.addChild(pixiState.towerLayer);
 
+  pixiState.highZLayer = new PIXI.Container();
+  app.stage.addChild(pixiState.highZLayer);
+  if (highZTexture) {
+    const highZSprite = new PIXI.Sprite(highZTexture);
+    highZSprite.x = 0;
+    highZSprite.y = 0;
+    highZSprite.width = ARTBOARD_WIDTH;
+    highZSprite.height = ARTBOARD_HEIGHT;
+    pixiState.highZLayer.addChild(highZSprite);
+  }
+
   pixiState.dockIconLayer = new PIXI.Container();
   app.stage.addChild(pixiState.dockIconLayer);
 
@@ -3866,15 +3956,25 @@ async function buildPixiScene() {
   app.stage.addChild(pixiState.textLayer);
 
   buildPixiDockCards();
-  buildPixiHudText();
+  buildPixiHudText(timerFillTexture);
   resizePixiRendererToLayout();
 }
 
-function buildPixiHudText() {
+function buildPixiHudText(timerFillTexture = null) {
   pixiState.textLayer.removeChildren();
-  pixiState.timerFill = new PIXI.Graphics()
-    .roundRect(TIMER_FILL_RECT.x, TIMER_FILL_RECT.y, TIMER_FILL_RECT.width, TIMER_FILL_RECT.height, 3)
-    .fill({ color: 0x22c55e, alpha: 0.94 });
+  pixiState.timerFillSprite = null;
+  if (timerFillTexture) {
+    pixiState.timerFill = new PIXI.Sprite(timerFillTexture);
+    pixiState.timerFill.x = -SAFE_AREA_OFFSET_X;
+    pixiState.timerFill.y = -SAFE_AREA_OFFSET_Y;
+    pixiState.timerFill.width = ARTBOARD_WIDTH;
+    pixiState.timerFill.height = ARTBOARD_HEIGHT;
+    pixiState.timerFillSprite = pixiState.timerFill;
+  } else {
+    pixiState.timerFill = new PIXI.Graphics()
+      .roundRect(TIMER_FILL_RECT.x, TIMER_FILL_RECT.y, TIMER_FILL_RECT.width, TIMER_FILL_RECT.height, 3)
+      .fill({ color: 0x22c55e, alpha: 0.94 });
+  }
   pixiState.timerMask = new PIXI.Graphics();
   pixiState.timerFill.mask = pixiState.timerMask;
   pixiState.textLayer.addChild(pixiState.timerFill);
@@ -4845,8 +4945,10 @@ function drawRoundBanner() {
 function drawBoard() {
   ensurePixiViewport();
   drawLane();
-  drawTowerRanges();
-  drawTankCreepRanges();
+  if (SHOW_RANGE_ARCS) {
+    drawTowerRanges();
+    drawTankCreepRanges();
+  }
   drawAttackers(state.attackersPlayer);
   drawAttackers(state.attackersAI);
   drawProjectiles();
@@ -5052,4 +5154,5 @@ lockLandscapeOrientation();
 registerNativeAppLifecycle();
 resizeBattlefieldFrame();
 refreshAllUI();
+ensurePixiViewport();
 requestAnimationFrame(gameLoop);

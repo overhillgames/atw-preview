@@ -1,0 +1,133 @@
+{
+  "source": "C:\\Users\\bmaga\\Dropbox\\Overhill\\Asset Dump\\ATW Battlefield Template with Bleed 630x1140.aseprite",
+  "canvas": { "width": 630, "height": 1140 },
+  "zOrderNote": "Export order follows Aseprite's layer collection order. zIndex is zero-based in that order; relative ordering is preserved for future mapping.",
+  "layers": [
+    {
+      "zIndex": 0,
+      "name": "bleed_area",
+      "path": "bleed_area",
+      "file": "00_bleed_area.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 1,
+      "name": "safe_area",
+      "path": "safe_area",
+      "file": "01_safe_area.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 2,
+      "name": "battlefield",
+      "path": "battlefield",
+      "file": "02_battlefield.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 3,
+      "name": "creep_dock",
+      "path": "creep_dock",
+      "file": "03_creep_dock.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 4,
+      "name": "tower_dock",
+      "path": "tower_dock",
+      "file": "04_tower_dock.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 5,
+      "name": "timer_round_panel",
+      "path": "timer_round_panel",
+      "file": "05_timer_round_panel.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 6,
+      "name": "timer_round_containers",
+      "path": "timer_round_containers",
+      "file": "06_timer_round_containers.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 7,
+      "name": "score_mana_panel",
+      "path": "score_mana_panel",
+      "file": "07_score_mana_panel.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 8,
+      "name": "score_mana_containers",
+      "path": "score_mana_containers",
+      "file": "08_score_mana_containers.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 9,
+      "name": "tower_card_frames",
+      "path": "tower_card_frames",
+      "file": "09_tower_card_frames.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 10,
+      "name": "tower_sprites",
+      "path": "tower_sprites",
+      "file": "10_tower_sprites.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 11,
+      "name": "creep_card_frames",
+      "path": "creep_card_frames",
+      "file": "11_creep_card_frames.png",
+      "originalVisible": true,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 12,
+      "name": "creep_sprites",
+      "path": "creep_sprites",
+      "file": "12_creep_sprites.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    },
+    {
+      "zIndex": 13,
+      "name": "battlefield_tower_positions",
+      "path": "battlefield_tower_positions",
+      "file": "13_battlefield_tower_positions.png",
+      "originalVisible": false,
+      "opacity": 255,
+      "blendMode": "3"
+    }
+  ]
+}

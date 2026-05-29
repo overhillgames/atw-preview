@@ -19,9 +19,12 @@
   },
   "homepage": "https://github.com/singazu/B-Line-Tower-Wars#readme",
   "dependencies": {
+    "@capacitor/android": "^8.3.4",
     "@capacitor/app": "^8.1.0",
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
     "@capacitor/haptics": "^8.0.2"
-  }
+  },
+  "main": "index.js",
+  "devDependencies": {}
 }

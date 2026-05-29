@@ -2,20 +2,21 @@
 
 Use this file with:
 
-- `.chrome-art-check/battle-screen-630x1140-bleed-template-v11.png`
+- `Reference/art/layout-proposals/ATW Battle Viewport Template v4 - 1260x1000.aseprite`
+- `Reference/art/layout-proposals/ATW Battle Viewport Template v4 - preview.png`
 
 ## What to draw
 
-- Draw on the full `630 x 1140` artboard.
-- The centered `420 x 760` safe screen must contain everything gameplay-critical.
+- Draw on the full `1260 x 1000` artboard.
+- The `420 x 760` safe screen must contain everything gameplay-critical.
 - The area outside the safe screen is decorative bleed. It may be visible on some devices and cropped on others.
 - Do not put gameplay-critical objects, readable text, lane markers, or important silhouettes in the bleed.
 
 ## Fixed screen areas
 
 - Safe screen: `420 x 760`
-- Safe screen position inside source: `x=105 y=190`
-- Bleed: `105 px` left/right, `190 px` top/bottom
+- Safe screen position inside source: `x=420 y=180`
+- Bleed: `420 px` left/right, `180 px` top, `60 px` bottom
 - Locked playable battlefield: `352 x 530`, at `x=34 y=48` inside the safe screen
 - Tower dock: `388 x 72`, with five `70 x 64` card boxes
 - Attacker dock: `388 x 72`, with five `70 x 64` card boxes
@@ -36,7 +37,7 @@ Use this file with:
 - These numbers are design coordinates, not required source resolution.
 - You may draw at `0.5x`, `1x`, `2x`, or `4x`.
 - If you scale, scale every coordinate and frame size uniformly.
-- Example: at `2x`, the source artboard is `1260 x 2280` and the safe screen is `840 x 1520`.
+- Example: at `2x`, the source artboard is `2520 x 2000` and the safe screen is `840 x 1520`.
 
 ## Keep clear
 

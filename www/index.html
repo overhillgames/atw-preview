@@ -4,15 +4,50 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Line Tower Wars</title>
+  <script>
+    (() => {
+      if (window.location.protocol !== "file:") {
+        return;
+      }
+
+      const previewUrl = "http://127.0.0.1:5500/";
+      const probe = new Image();
+      let redirected = false;
+
+      probe.onload = () => {
+        redirected = true;
+        window.location.replace(previewUrl);
+      };
+      probe.src = `${previewUrl}assets/battlefield-template-v3/03_battlefield.png?probe=${Date.now()}`;
+
+      window.addEventListener("DOMContentLoaded", () => {
+        window.setTimeout(() => {
+          if (redirected || window.location.protocol !== "file:") {
+            return;
+          }
+          document.body.innerHTML = `
+            <main class="app-shell">
+              <section class="panel" style="max-width: 34rem; margin: 3rem auto; padding: 1.25rem; line-height: 1.45;">
+                <p class="eyebrow">Preview Required</p>
+                <h1 style="margin: 0 0 0.75rem;">Open the local preview server</h1>
+                <p>Direct file mode cannot render the Pixi battle art because browsers block local images from WebGL.</p>
+                <p>Run <code>.\\preview.ps1</code>, then open <a href="${previewUrl}">${previewUrl}</a>.</p>
+              </section>
+            </main>
+          `;
+        }, 900);
+      });
+    })();
+  </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="app-shell" id="app-shell">
     <section class="orientation-notice hidden" id="orientation-notice" aria-live="polite">
       <div class="orientation-card">
-        <p class="eyebrow">Landscape Recommended</p>
-        <h2>Rotate your device</h2>
-        <p>Line Tower Wars is tuned for landscape play with large tap targets and a fixed battlefield view.</p>
+        <p class="eyebrow">Portrait Required</p>
+        <h2>Keep your device upright</h2>
+        <p>Line Tower Wars is tuned for portrait play with large tap targets and a fixed battlefield view.</p>
       </div>
     </section>
     <section class="screen menu-screen" id="menu-screen" aria-labelledby="menu-title">
@@ -167,6 +202,7 @@
     <section class="screen game-screen hidden" id="game-screen" aria-label="Game screen">
       <section class="arena-zone">
         <div class="arena-wrap" id="arena-drop-zone">
+          <div id="pixi-viewport" aria-label="Battle viewport"></div>
           <div class="slot-row enemy-slots" id="enemy-slots"></div>
           <canvas id="arena-canvas" width="420" height="760" aria-label="Battlefield"></canvas>
           <div class="timer-widget" aria-label="Wave timer">
@@ -198,6 +234,8 @@
               <strong id="player-score">0</strong>
             </div>
           </div>
+          <button class="floating-pause-btn" id="floating-pause-btn" type="button">Pause</button>
+          <button class="ready-btn" id="ready-btn" type="button">Ready</button>
           <section class="shop-overlay hidden" id="shop-overlay" aria-label="Upgrade shop">
             <div class="shop-card">
               <div class="shop-header">
@@ -282,6 +320,7 @@
     </section>
   </main>
 
+  <script src="vendor/pixi.min.js"></script>
   <script src="script.js"></script>
 
   <!-- Firebase compat SDK (v10) — required for multiplayer -->
@@ -292,5 +331,30 @@
   <!-- Multiplayer layer — must load after Firebase SDK and after script.js -->
   <script src="multiplayer.js"></script>
   <script src="lobby.js"></script>
+  <script>
+    (() => {
+      const fallbackActions = {
+        "play-match-btn": () => window.startNewMatch?.(),
+        "resume-match-btn": () => window.setScreen?.("game"),
+        "open-records-btn": () => window.setScreen?.("records"),
+        "open-options-btn": () => window.setScreen?.("options"),
+        "options-back-btn": () => window.setScreen?.("menu"),
+        "records-back-btn": () => window.setScreen?.("menu"),
+        "match-play-again-btn": () => window.startNewMatch?.(),
+        "match-home-btn": () => window.setScreen?.("menu")
+      };
+
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        const action = button && fallbackActions[button.id];
+        if (!action) {
+          return;
+        }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        action();
+      }, true);
+    })();
+  </script>
 </body>
 </html>

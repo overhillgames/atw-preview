@@ -23,6 +23,10 @@
   --game-frame-height: 760px;
   --game-frame-scale: 1;
   --game-frame-aspect: 0.5526315789;
+  --safe-frame-x: 0px;
+  --safe-frame-y: 0px;
+  --pixi-safe-width: 420px;
+  --pixi-safe-height: 760px;
 }
 
 * {
@@ -75,10 +79,15 @@ select {
 .app-shell.game-active {
   display: grid;
   justify-items: center;
-  align-items: start;
+  align-items: center;
   max-width: none;
   min-height: var(--app-height);
-  overflow-x: hidden;
+  padding:
+    var(--safe-top)
+    var(--safe-right)
+    var(--safe-bottom)
+    var(--safe-left);
+  overflow: hidden;
 }
 
 #game-screen {
@@ -570,9 +579,14 @@ select {
   display: grid;
   width: var(--game-frame-width);
   max-width: 100%;
-  grid-template-rows: var(--game-frame-height) auto;
-  gap: 0.75rem;
+  min-height: var(--game-frame-height);
+  grid-template-rows: var(--game-frame-height);
+  gap: 0;
   justify-self: center;
+}
+
+#game-screen {
+  min-height: var(--game-frame-height);
 }
 
 .game-screen.desktop-debug-preview {
@@ -619,25 +633,56 @@ select {
   width: var(--game-frame-width);
   height: var(--game-frame-height);
   min-height: 0;
-  aspect-ratio: 420 / 760;
+  aspect-ratio: auto;
   border: 0;
-  outline: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 1.45rem;
+  outline: 0;
+  border-radius: 0;
   overflow: hidden;
-  background: #ddd;
-  box-shadow: var(--shadow);
+  background: #08111f;
+  box-shadow: none;
   flex: none;
 }
 
-#arena-canvas {
-  width: 100%;
-  height: 100%;
+#pixi-viewport {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background: #08111f;
+}
+
+#pixi-viewport canvas {
   display: block;
+  width: 100% !important;
+  height: 100% !important;
+  image-rendering: auto;
+}
+
+#arena-canvas {
+  position: absolute;
+  left: var(--safe-frame-x);
+  top: var(--safe-frame-y);
+  width: var(--pixi-safe-width);
+  height: var(--pixi-safe-height);
+  display: block;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.pixi-failed #arena-canvas {
+  visibility: visible;
+}
+
+.pixi-failed .bottom-bar {
+  display: grid;
 }
 
 .slot-row {
   position: absolute;
-  inset: 0;
+  left: var(--safe-frame-x);
+  top: var(--safe-frame-y);
+  width: var(--pixi-safe-width);
+  height: var(--pixi-safe-height);
   z-index: 3;
   pointer-events: none;
 }
@@ -646,8 +691,8 @@ select {
   width: 14.0476%;
   height: 7.5%;
   border-radius: 0.7rem;
-  border: 1px solid #2b4f6f;
-  background: var(--slot-empty);
+  border: 1px solid transparent;
+  background: transparent;
   display: grid;
   place-items: center;
   font-size: 0.75rem;
@@ -661,20 +706,24 @@ select {
 }
 
 .tower-slot.player {
-  background: var(--slot);
+  background: transparent;
   color: #f8fafc;
 }
 
 [data-art-pack="unfuneralOD"] .tower-slot:not(.filled) {
-  background: rgba(148, 163, 184, 0.2);
-  border-color: rgba(15, 23, 42, 0.34);
-  color: #f8fafc;
-  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.65);
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+  text-shadow: none;
 }
 
 .tower-slot.filled {
-  background: rgba(49, 95, 132, 0.24);
-  border-color: rgba(43, 79, 111, 0.45);
+  background: transparent;
+  border-color: transparent;
+}
+
+.tower-slot > span {
+  display: none;
 }
 
 .tower-slot.over {
@@ -688,7 +737,7 @@ select {
 }
 
 .slot-tower {
-  display: block;
+  display: none;
   width: 100%;
   height: 100%;
   position: relative;
@@ -720,7 +769,7 @@ select {
   width: 15.7143%;
   height: 34.2105%;
   z-index: 4;
-  display: grid;
+  display: none;
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   justify-items: center;
   gap: 0.35rem;
@@ -808,7 +857,7 @@ select {
   transform: translateY(-50%);
   width: 17.1429%;
   z-index: 4;
-  display: grid;
+  display: none;
   justify-items: stretch;
   gap: 0.32rem;
   pointer-events: none;
@@ -1034,9 +1083,61 @@ select {
 }
 
 .bottom-bar {
-  display: grid;
+  display: none;
   gap: 0.7rem;
   min-width: 0;
+}
+
+.floating-pause-btn {
+  position: absolute;
+  right: max(calc(0.35rem + 3px), calc(var(--safe-frame-x) + 0.35rem + 3px));
+  top: calc(var(--safe-frame-y) + (var(--pixi-safe-height) * 0.62) - 50px);
+  z-index: 30;
+  min-height: 28px;
+  padding: 0.25rem 0.45rem;
+  border-radius: 0.45rem;
+  border: 2px solid rgba(255, 255, 255, 0.78);
+  background: rgba(2, 6, 23, 0.86);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+.floating-pause-btn[hidden] {
+  display: none;
+}
+
+#game-screen .ready-btn {
+  position: absolute;
+  left: calc(var(--safe-frame-x) + (var(--pixi-safe-width) * 0.0238));
+  top: calc(var(--safe-frame-y) + (var(--pixi-safe-height) * 0.5421));
+  z-index: 30;
+  width: calc(var(--pixi-safe-width) * 0.1286);
+  min-height: calc(var(--pixi-safe-height) * 0.0355);
+  padding: 0.12rem 0.2rem;
+  border-radius: 0.35rem;
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  background: rgba(16, 185, 129, 0.92);
+  color: #ffffff;
+  font-size: 0.66rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: auto;
+}
+
+#game-screen .ready-btn[hidden] {
+  display: none;
+}
+
+[data-art-pack="unfuneralOD"] #game-screen .ready-btn {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.75);
 }
 
 .card-docks {
@@ -1304,10 +1405,10 @@ button:disabled {
 
   .app-shell.game-active {
     padding:
-      calc(0.4rem + var(--safe-top))
-      calc(0.45rem + var(--safe-right))
-      calc(0.4rem + var(--safe-bottom))
-      calc(0.45rem + var(--safe-left));
+      var(--safe-top)
+      var(--safe-right)
+      var(--safe-bottom)
+      var(--safe-left);
   }
 
   .game-screen {
@@ -1404,10 +1505,10 @@ button:disabled {
 
   .app-shell.game-active {
     padding:
-      calc(0.4rem + var(--safe-top))
-      calc(0.45rem + var(--safe-right))
-      calc(0.4rem + var(--safe-bottom))
-      calc(0.45rem + var(--safe-left));
+      var(--safe-top)
+      var(--safe-right)
+      var(--safe-bottom)
+      var(--safe-left);
   }
 
   .screen {

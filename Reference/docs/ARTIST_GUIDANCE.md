@@ -53,18 +53,18 @@ Files:
 Format:
 - PNG-24 with alpha, sRGB
 - Transparent background
-- Same canvas size for every tower in the pack
-- Same canvas size for level 1 and level 2 versions of a tower
+- Game-ready render box: `64 x 78`
+- Same game-ready canvas size for every tower in the pack
+- Same game-ready canvas size for level 1 and level 2 versions of a tower
 
 Illustrated/high-resolution packs:
-- Recommended export size: `384 x 384`
-- `512 x 512` source files are welcome, but production exports should be normalized consistently.
+- Larger source files such as `128 x 156`, `384 x 468`, or `512 x 624` are welcome, but production exports should be normalized into the `64 x 78` game-ready canvas.
 - Keep the tower centered with a shared base/bottom alignment.
-- Must read clearly when displayed around `76 x 76`, `96 x 96`, and `115 x 115`.
+- Must read clearly when displayed in the `64 x 78` tower render box, including when temporarily scaled for upgrade previews.
 
 Pixel-art packs:
-- Recommended export size: `64 x 64`
-- `48 x 48` is acceptable if every tower in the pack uses that same grid.
+- Recommended game-ready export size: `64 x 78`
+- Smaller source art such as `32 x 39` is acceptable if it is exported into the same `64 x 78` transparent canvas.
 - Use crisp pixels; avoid antialiasing unless it is a deliberate part of the style.
 - Engineering will upscale with nearest-neighbor/pixelated rendering.
 - Keep level 2 on the same canvas size; make the visible sprite feel upgraded inside that canvas.

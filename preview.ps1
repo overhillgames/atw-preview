@@ -164,6 +164,10 @@ try {
         }
       }
       $requestPath = $requestPath.Trim()
+      $queryStart = $requestPath.IndexOf("?")
+      if ($queryStart -ge 0) {
+        $requestPath = $requestPath.Substring(0, $queryStart)
+      }
       if ($requestPath.Length -gt 1) {
         $requestPath = $requestPath.TrimEnd("/")
       }

@@ -1904,12 +1904,6 @@ function placePlayerTower(slotIndex, towerId) {
   }
 
   const existingTower = state.playerTowers[slotIndex];
-  if (existingTower && existingTower.id !== towerDef.id) {
-    updateStatus(`Slot ${slotIndex + 1} is occupied. Choose an empty slot or upgrade the matching tower.`);
-    triggerPlacementHaptic("error");
-    return;
-  }
-
   if (existingTower && existingTower.id === towerDef.id && existingTower.level >= getTowerMaxLevel(towerDef.id)) {
     updateStatus(`${towerDef.name} tower is already at max level in slot ${slotIndex + 1}.`);
     triggerPlacementHaptic("error");
@@ -1931,6 +1925,9 @@ function placePlayerTower(slotIndex, towerId) {
     const nextLevel = existingTower.level + 1;
     state.playerTowers[slotIndex] = createTowerInstance(towerDef, "player", nextLevel);
     updateStatus(`Upgraded ${towerDef.name} tower to level ${nextLevel} in slot ${slotIndex + 1}.`);
+  } else if (existingTower) {
+    state.playerTowers[slotIndex] = createTowerInstance(towerDef, "player", 1);
+    updateStatus(`Replaced ${existingTower.name} tower with ${towerDef.name} tower in slot ${slotIndex + 1}.`);
   } else {
     state.playerTowers[slotIndex] = createTowerInstance(towerDef, "player", 1);
     updateStatus(`Placed ${towerDef.name} tower in slot ${slotIndex + 1}.`);
@@ -1940,6 +1937,20 @@ function placePlayerTower(slotIndex, towerId) {
   triggerPlacementHaptic("impact");
   clearSelectedTower();
   refreshAllUI();
+}
+
+function canPlaceSelectedTowerInSlot(slotIndex) {
+  if (!selectedTowerId || !isPlayerInputAllowed()) {
+    return false;
+  }
+  const towerDef = towerDefs.find((item) => item.id === selectedTowerId);
+  if (!towerDef || state.playerMana < towerDef.cost) {
+    return false;
+  }
+  const existingTower = state.playerTowers[slotIndex];
+  return !existingTower
+    || existingTower.id !== towerDef.id
+    || existingTower.level < getTowerMaxLevel(towerDef.id);
 }
 
 function queuePlayerAttacker(attackerId) {
@@ -2041,7 +2052,7 @@ function refreshTowerSlots() {
     const playerTower = state.playerTowers[i];
     playerSlot.innerHTML = playerTower ? towerMarkup(playerTower) : `<span>${i + 1}</span>`;
     playerSlot.classList.toggle("filled", !!playerTower);
-    playerSlot.classList.toggle("placement-target", !!selectedTowerId && !playerTower && isPlayerInputAllowed());
+    playerSlot.classList.toggle("placement-target", canPlaceSelectedTowerInSlot(i));
 
     const enemySlot = enemySlots[i];
     const aiTower = state.aiTowers[i];
@@ -4108,7 +4119,7 @@ function onTowerCardActivated(tower) {
   selectedTowerId = selectedTowerId === tower.id ? null : tower.id;
   refreshCardStates();
   updateStatus(selectedTowerId
-    ? `Selected ${tower.name}. Tap an empty slot to place it.`
+    ? `Selected ${tower.name}. Tap a slot to place, upgrade, or replace.`
     : "Tower selection cleared.");
 }
 

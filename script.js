@@ -314,7 +314,10 @@ const attackerDefs = [
 ];
 const DEFAULT_OPTIONS = {
   difficulty: "yellow",
-  artPack: "unfuneralOD"
+  artPack: "unfuneralOD",
+  musicPack: "christopherJosephUehlein",
+  musicVolume: 80,
+  sfxVolume: 85
 };
 const ART_PACK_OPTIONS = [
   { id: "classic", name: "Classic", unlocked: true, preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
@@ -325,6 +328,37 @@ const ART_PACK_OPTIONS = [
   { id: "artist6", name: "Artist Slot 6", unlocked: false, preview: { creeps: ["imp", "wisp"], towers: ["red", "green"] } },
   { id: "artist7", name: "Artist Slot 7", unlocked: false, preview: { creeps: ["brute", "tank"], towers: ["yellow", "blue"] } },
   { id: "artist8", name: "Artist Slot 8", unlocked: false, preview: { creeps: ["runner", "brute"], towers: ["violet", "red"] } }
+];
+const MUSIC_PACK_OPTIONS = [
+  {
+    id: "christopherJosephUehlein",
+    name: "Christopher Joseph Uehlein",
+    unlocked: true,
+    icon: "assets/music/composers/christopher-joseph-uehlein.png",
+    link: "https://overhill.games",
+    tracks: [
+      { title: "ATW Track 01 Original", src: "assets/music/christopher-joseph-uehlein-track-1.m4a" },
+      { title: "ATW Track 02 Military Snare", src: "assets/music/christopher-joseph-uehlein-track-2.m4a" }
+    ]
+  },
+  {
+    id: "martinBiesecke",
+    name: "Martin Biesecke",
+    unlocked: true,
+    icon: "assets/music/composers/martin-biesecke.png",
+    link: "https://music.apple.com/us/artist/martin-biesecke/1452071768",
+    tracks: [
+      { title: "Calm Stamets Point Theme", src: "assets/music/martin-biesecke-track-1.m4a" },
+      { title: "Singularity Theme", src: "assets/music/martin-biesecke-track-2.m4a" },
+      { title: "Martin Robot Combo", src: "assets/music/martin-biesecke-track-3.m4a" }
+    ]
+  },
+  { id: "composer3", name: "Music Slot 3", unlocked: false, trackCount: 0 },
+  { id: "composer4", name: "Music Slot 4", unlocked: false, trackCount: 0 },
+  { id: "composer5", name: "Music Slot 5", unlocked: false, trackCount: 0 },
+  { id: "composer6", name: "Music Slot 6", unlocked: false, trackCount: 0 },
+  { id: "composer7", name: "Music Slot 7", unlocked: false, trackCount: 0 },
+  { id: "composer8", name: "Music Slot 8", unlocked: false, trackCount: 0 }
 ];
 const AI_DIFFICULTY_SETTINGS = {
   purple: {
@@ -421,16 +455,26 @@ document.documentElement.dataset.artPack = activeArtPackId;
 applyArtPack(activeArtPackId);
 
 const menuScreenEl = document.getElementById("menu-screen");
-const optionsScreenEl = document.getElementById("options-screen");
+const difficultyOptionsScreenEl = document.getElementById("difficulty-options-screen");
+const musicOptionsScreenEl = document.getElementById("music-options-screen");
+const artOptionsScreenEl = document.getElementById("art-options-screen");
 const recordsScreenEl = document.getElementById("records-screen");
 const gameScreenEl = document.getElementById("game-screen");
 const appShellEl = document.getElementById("app-shell");
 const orientationNoticeEl = document.getElementById("orientation-notice");
 const playMatchBtnEl = document.getElementById("play-match-btn");
-const openOptionsBtnEl = document.getElementById("open-options-btn");
-const optionsBackBtnEl = document.getElementById("options-back-btn");
+const openDifficultyOptionsBtnEl = document.getElementById("open-difficulty-options-btn");
+const openMusicOptionsBtnEl = document.getElementById("open-music-options-btn");
+const openArtOptionsBtnEl = document.getElementById("open-art-options-btn");
+const optionsBackBtnEls = document.querySelectorAll(".options-back-btn");
 const difficultyListEl = document.getElementById("difficulty-list");
 const difficultySummaryEl = document.getElementById("difficulty-summary");
+const musicPackGridEl = document.getElementById("music-pack-grid");
+const musicSummaryEl = document.getElementById("music-summary");
+const musicVolumeSliderEl = document.getElementById("music-volume-slider");
+const musicVolumeValueEl = document.getElementById("music-volume-value");
+const sfxVolumeSliderEl = document.getElementById("sfx-volume-slider");
+const sfxVolumeValueEl = document.getElementById("sfx-volume-value");
 const artPackGridEl = document.getElementById("art-pack-grid");
 const resumeMatchBtnEl = document.getElementById("resume-match-btn");
 const openRecordsBtnEl = document.getElementById("open-records-btn");
@@ -566,6 +610,11 @@ let selectedTowerId = null;
 let touchDragState = null;
 let audioCtx = null;
 let audioUnlocked = false;
+let sfxMasterGain = null;
+let musicAudioEl = null;
+let activeMusicPackId = DEFAULT_OPTIONS.musicPack;
+let activeMusicTrackIndex = 0;
+let musicFadeTimer = null;
 let lastAppHiddenAt = null;
 let wasPausedBeforeBackground = false;
 let laneBackgroundCanvas = null;
@@ -1298,6 +1347,71 @@ function refreshArtOptionsUI() {
   }
 }
 
+function getMusicPackOption(musicPackId) {
+  return MUSIC_PACK_OPTIONS.find((option) => option.id === musicPackId) || MUSIC_PACK_OPTIONS[0];
+}
+
+function renderMusicPackOptions() {
+  if (!musicPackGridEl) {
+    return;
+  }
+
+  musicPackGridEl.innerHTML = MUSIC_PACK_OPTIONS.map((option) => {
+    const lockedLabel = option.unlocked ? "" : `<span class="music-lock">In-App Purchase</span>`;
+    const trackCount = option.tracks?.length || option.trackCount || 0;
+    const trackLabel = trackCount > 0
+      ? `${trackCount} track${trackCount === 1 ? "" : "s"}`
+      : "Awaiting tracks";
+    const icon = option.icon
+      ? `<img class="music-pack-icon" src="${option.icon}" alt="" />`
+      : `<span class="music-slot-icon" aria-hidden="true"></span>`;
+    const iconMarkup = option.icon && option.link
+      ? `<a class="music-composer-link" href="${option.link}" target="_blank" rel="noopener noreferrer" aria-label="${option.name} link">${icon}</a>`
+      : icon;
+    return `
+      <div class="music-pack-option${option.unlocked ? "" : " locked"}" role="radio" tabindex="${option.unlocked ? "0" : "-1"}" aria-checked="false" data-music-pack="${option.id}" ${option.unlocked ? "" : "aria-disabled=\"true\""} aria-label="${option.name}${option.unlocked ? "" : " locked"}">
+        ${iconMarkup}
+        <span class="music-pack-name-row">
+          <strong>${option.name}</strong>
+          <span>${trackLabel}</span>
+        </span>
+        ${lockedLabel}
+      </div>
+    `;
+  }).join("");
+}
+
+function refreshMusicOptionsUI() {
+  if (musicVolumeSliderEl) {
+    musicVolumeSliderEl.value = String(gameOptions.musicVolume);
+  }
+  if (musicVolumeValueEl) {
+    musicVolumeValueEl.value = `${gameOptions.musicVolume}%`;
+    musicVolumeValueEl.textContent = `${gameOptions.musicVolume}%`;
+  }
+  if (sfxVolumeSliderEl) {
+    sfxVolumeSliderEl.value = String(gameOptions.sfxVolume);
+  }
+  if (sfxVolumeValueEl) {
+    sfxVolumeValueEl.value = `${gameOptions.sfxVolume}%`;
+    sfxVolumeValueEl.textContent = `${gameOptions.sfxVolume}%`;
+  }
+  if (musicSummaryEl) {
+    const selected = getMusicPackOption(gameOptions.musicPack);
+    const trackCount = selected.tracks?.length || selected.trackCount || 0;
+    musicSummaryEl.textContent = trackCount > 0
+      ? `${selected.name} selected for battle music.`
+      : `${selected.name} selected. Add M4A tracks to enable playback.`;
+  }
+  if (!musicPackGridEl) {
+    return;
+  }
+  for (const option of musicPackGridEl.querySelectorAll(".music-pack-option")) {
+    const selected = option.dataset.musicPack === gameOptions.musicPack;
+    option.setAttribute("aria-checked", selected ? "true" : "false");
+  }
+}
+
 function applyPixiTemplate(template = {}) {
   ARTBOARD_WIDTH = template.artboardWidth || 630;
   ARTBOARD_HEIGHT = template.artboardHeight || 860;
@@ -1375,6 +1489,16 @@ function loadOptions() {
     if (!ART_PACKS[gameOptions.artPack]) {
       gameOptions.artPack = DEFAULT_OPTIONS.artPack;
     }
+    if (gameOptions.musicPack === "composer1") {
+      gameOptions.musicPack = DEFAULT_OPTIONS.musicPack;
+    } else if (gameOptions.musicPack === "composer2") {
+      gameOptions.musicPack = "martinBiesecke";
+    }
+    if (!MUSIC_PACK_OPTIONS.some((option) => option.id === gameOptions.musicPack)) {
+      gameOptions.musicPack = DEFAULT_OPTIONS.musicPack;
+    }
+    gameOptions.musicVolume = clamp(Number(gameOptions.musicVolume), 0, 100);
+    gameOptions.sfxVolume = clamp(Number(gameOptions.sfxVolume), 0, 100);
   } catch {
     gameOptions = { ...DEFAULT_OPTIONS };
   }
@@ -1409,12 +1533,45 @@ function setArtPack(artPackId) {
   refreshArtOptionsUI();
 }
 
+function setMusicPack(musicPackId) {
+  const option = getMusicPackOption(musicPackId);
+  if (!option.unlocked) {
+    return;
+  }
+  gameOptions.musicPack = option.id;
+  activeMusicPackId = option.id;
+  activeMusicTrackIndex = 0;
+  if (musicAudioEl) {
+    musicAudioEl.pause();
+    musicAudioEl.removeAttribute("src");
+    musicAudioEl.load();
+  }
+  saveOptions();
+  refreshMusicOptionsUI();
+  syncMusicPlaybackForScreen();
+}
+
+function setMusicVolume(volume) {
+  gameOptions.musicVolume = clamp(Number(volume), 0, 100);
+  updateMusicVolume();
+  saveOptions();
+  refreshMusicOptionsUI();
+}
+
+function setSfxVolume(volume) {
+  gameOptions.sfxVolume = clamp(Number(volume), 0, 100);
+  updateSfxVolume();
+  saveOptions();
+  refreshMusicOptionsUI();
+}
+
 function refreshOptionsUI() {
   const settings = getAIDifficultySettings();
   if (difficultySummaryEl) {
     difficultySummaryEl.textContent = settings.summary;
   }
   renderArtPackOptions();
+  renderMusicPackOptions();
   if (!difficultyListEl) {
     return;
   }
@@ -1422,6 +1579,7 @@ function refreshOptionsUI() {
     const selected = option.dataset.difficulty === gameOptions.difficulty;
     option.setAttribute("aria-checked", selected ? "true" : "false");
   }
+  refreshMusicOptionsUI();
   refreshArtOptionsUI();
 }
 
@@ -1465,7 +1623,9 @@ function refreshMetaUI() {
 function setScreen(screen) {
   state.screen = screen;
   menuScreenEl.classList.toggle("hidden", screen !== "menu");
-  optionsScreenEl.classList.toggle("hidden", screen !== "options");
+  difficultyOptionsScreenEl.classList.toggle("hidden", screen !== "difficultyOptions");
+  musicOptionsScreenEl.classList.toggle("hidden", screen !== "musicOptions");
+  artOptionsScreenEl.classList.toggle("hidden", screen !== "artOptions");
   recordsScreenEl.classList.toggle("hidden", screen !== "records");
   gameScreenEl.classList.toggle("hidden", screen !== "game");
   refreshMenuUI();
@@ -1473,6 +1633,7 @@ function setScreen(screen) {
   refreshRecordsUI();
   updateOrientationNotice();
   requestAnimationFrame(resizeBattlefieldFrame);
+  syncMusicPlaybackForScreen();
 }
 
 function recordUnitScore(attackerId, owner) {
@@ -1697,6 +1858,7 @@ function startNewMatch() {
   state.paused = false;
   setScreen("game");
   lockLandscapeOrientation();
+  playCurrentMusicTrack();
   refreshAllUI();
 }
 
@@ -2234,6 +2396,7 @@ function registerNativeAppLifecycle() {
         saveMatchStateNow();
         queueStatsSave();
       }
+      pauseMusicForMenu();
       return;
     }
 
@@ -2352,6 +2515,7 @@ document.addEventListener("visibilitychange", () => {
       saveMatchStateNow();
       queueStatsSave();
     }
+    pauseMusicForMenu();
     return;
   }
 
@@ -2443,6 +2607,7 @@ function buildMatchSummary() {
 
 function finishMatch() {
   clearTowerFireAnimations();
+  fadeOutMatchMusic(true);
   state.phase = "gameover";
   state.gameOver = true;
   if (state.playerScore === state.aiScore) {
@@ -3096,6 +3261,7 @@ function ensureAudioContext() {
   if (audioCtx.state === "suspended") {
     audioCtx.resume();
   }
+  ensureSfxMasterGain();
   return audioCtx;
 }
 
@@ -3109,6 +3275,156 @@ function resumeAudioAfterBackground() {
     return;
   }
   ensureAudioContext();
+  syncMusicPlaybackForScreen();
+}
+
+function getVolumeScale(value) {
+  return clamp(Number(value) || 0, 0, 100) / 100;
+}
+
+function ensureSfxMasterGain() {
+  if (!audioCtx || sfxMasterGain) {
+    return sfxMasterGain;
+  }
+  sfxMasterGain = audioCtx.createGain();
+  sfxMasterGain.gain.value = getVolumeScale(gameOptions.sfxVolume);
+  sfxMasterGain.connect(audioCtx.destination);
+  return sfxMasterGain;
+}
+
+function connectSfxOutput(node) {
+  const master = ensureSfxMasterGain();
+  node.connect(master || audioCtx.destination);
+}
+
+function updateSfxVolume() {
+  if (!sfxMasterGain || !audioCtx) {
+    return;
+  }
+  sfxMasterGain.gain.setTargetAtTime(getVolumeScale(gameOptions.sfxVolume), audioCtx.currentTime, 0.02);
+}
+
+function updateMusicVolume() {
+  if (!musicAudioEl) {
+    return;
+  }
+  musicAudioEl.volume = getVolumeScale(gameOptions.musicVolume);
+}
+
+function getSelectedMusicPack() {
+  const selected = getMusicPackOption(gameOptions.musicPack);
+  return selected.tracks?.length ? selected : null;
+}
+
+function stopMusicFade() {
+  if (!musicFadeTimer) {
+    return;
+  }
+  window.clearInterval(musicFadeTimer);
+  musicFadeTimer = null;
+}
+
+function ensureMusicAudioElement() {
+  if (musicAudioEl) {
+    return musicAudioEl;
+  }
+  musicAudioEl = new Audio();
+  musicAudioEl.preload = "auto";
+  musicAudioEl.addEventListener("ended", playNextMusicTrack);
+  updateMusicVolume();
+  return musicAudioEl;
+}
+
+function prepareCurrentMusicTrack(pack) {
+  const tracks = pack.tracks || [];
+  if (!tracks.length) {
+    return null;
+  }
+  if (activeMusicPackId !== pack.id) {
+    activeMusicPackId = pack.id;
+    activeMusicTrackIndex = 0;
+  }
+  activeMusicTrackIndex = ((activeMusicTrackIndex % tracks.length) + tracks.length) % tracks.length;
+  return tracks[activeMusicTrackIndex];
+}
+
+function playCurrentMusicTrack() {
+  const pack = getSelectedMusicPack();
+  if (!pack || state.screen !== "game" || !state.hasActiveMatch || state.gameOver) {
+    return;
+  }
+  const track = prepareCurrentMusicTrack(pack);
+  if (!track) {
+    return;
+  }
+  const audio = ensureMusicAudioElement();
+  stopMusicFade();
+  if (audio.src !== new URL(track.src, window.location.href).href) {
+    audio.src = track.src;
+    audio.currentTime = 0;
+  }
+  updateMusicVolume();
+  audio.play().catch(() => {});
+}
+
+function playNextMusicTrack() {
+  const pack = getSelectedMusicPack();
+  if (!pack) {
+    return;
+  }
+  activeMusicPackId = pack.id;
+  activeMusicTrackIndex = (activeMusicTrackIndex + 1) % pack.tracks.length;
+  if (state.screen === "game" && state.hasActiveMatch && !state.gameOver) {
+    playCurrentMusicTrack();
+  }
+}
+
+function advanceSelectedMusicTrack() {
+  const pack = getSelectedMusicPack();
+  if (!pack) {
+    return;
+  }
+  activeMusicPackId = pack.id;
+  activeMusicTrackIndex = (activeMusicTrackIndex + 1) % pack.tracks.length;
+}
+
+function pauseMusicForMenu() {
+  stopMusicFade();
+  if (musicAudioEl && !musicAudioEl.paused) {
+    musicAudioEl.pause();
+  }
+}
+
+function fadeOutMatchMusic(advanceAfterFade = true) {
+  stopMusicFade();
+  if (advanceAfterFade) {
+    advanceSelectedMusicTrack();
+  }
+  if (!musicAudioEl || musicAudioEl.paused) {
+    return;
+  }
+  const audio = musicAudioEl;
+  const startVolume = audio.volume;
+  const startTime = performance.now();
+  musicFadeTimer = window.setInterval(() => {
+    const progress = clamp((performance.now() - startTime) / 1000, 0, 1);
+    audio.volume = startVolume * (1 - progress);
+    if (progress < 1) {
+      return;
+    }
+    stopMusicFade();
+    audio.pause();
+    audio.currentTime = 0;
+    updateMusicVolume();
+  }, 50);
+}
+
+function syncMusicPlaybackForScreen() {
+  if (state.screen === "game" && state.hasActiveMatch && !state.gameOver && !state.paused) {
+    playCurrentMusicTrack();
+  } else {
+    pauseMusicForMenu();
+  }
 }
 
 function playTowerFireSfx(towerId) {
@@ -3136,7 +3452,7 @@ function playTowerFireSfx(towerId) {
     gain.gain.exponentialRampToValueAtTime(0.06, now + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
     osc.connect(gain);
-    gain.connect(ctxAudio.destination);
+    connectSfxOutput(gain);
     wobble.start(now);
     osc.start(now);
     wobble.stop(now + 0.12);
@@ -3161,7 +3477,7 @@ function playTowerFireSfx(towerId) {
     gain.gain.exponentialRampToValueAtTime(0.028, now + 0.004);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
     osc.connect(gain);
-    gain.connect(ctxAudio.destination);
+    connectSfxOutput(gain);
     gateLfo.start(now);
     osc.start(now);
     gateLfo.stop(now + 0.075);
@@ -3208,7 +3524,7 @@ function playTowerFireSfx(towerId) {
     noise.connect(noiseGain);
     noiseGain.connect(filter);
     filter.connect(mix);
-    mix.connect(ctxAudio.destination);
+    connectSfxOutput(mix);
 
     osc.start(now);
     noise.start(now);
@@ -3235,7 +3551,7 @@ function playTowerFireSfx(towerId) {
     gain.gain.exponentialRampToValueAtTime(0.08, now + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
     osc.connect(gain);
-    gain.connect(ctxAudio.destination);
+    connectSfxOutput(gain);
     lfo.start(now);
     osc.start(now);
     lfo.stop(now + 0.14);
@@ -3258,7 +3574,7 @@ function playTowerFireSfx(towerId) {
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(ctxAudio.destination);
+    connectSfxOutput(gain);
     osc.start(now);
     osc.stop(now + 0.14);
   }
@@ -3281,7 +3597,7 @@ function playBonusManaSfx(source = "kill") {
     gain.gain.exponentialRampToValueAtTime(0.045, now + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
     osc.connect(gain);
-    gain.connect(ctxAudio.destination);
+    connectSfxOutput(gain);
     osc.start(now);
     osc.stop(now + 0.13);
     return;
@@ -3301,7 +3617,7 @@ function playBonusManaSfx(source = "kill") {
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
   osc.connect(filter);
   filter.connect(gain);
-  gain.connect(ctxAudio.destination);
+  connectSfxOutput(gain);
   osc.start(now);
   osc.stop(now + 0.095);
 }
@@ -5036,6 +5352,7 @@ function togglePause() {
   }
   state.paused = !state.paused;
   syncPauseButtons();
+  syncMusicPlaybackForScreen();
   saveMatchStateNow();
   if (state.paused) {
     updateStatus("Paused.");
@@ -5066,12 +5383,30 @@ openRecordsBtnEl.addEventListener("click", () => {
   setScreen("records");
 });
 
-openOptionsBtnEl.addEventListener("click", () => {
-  setScreen("options");
+openDifficultyOptionsBtnEl.addEventListener("click", () => {
+  setScreen("difficultyOptions");
 });
 
-optionsBackBtnEl.addEventListener("click", () => {
-  setScreen("menu");
+openMusicOptionsBtnEl.addEventListener("click", () => {
+  setScreen("musicOptions");
+});
+
+openArtOptionsBtnEl.addEventListener("click", () => {
+  setScreen("artOptions");
+});
+
+for (const optionsBackBtnEl of optionsBackBtnEls) {
+  optionsBackBtnEl.addEventListener("click", () => {
+    setScreen("menu");
+  });
+}
+
+musicVolumeSliderEl.addEventListener("input", (event) => {
+  setMusicVolume(event.target.value);
+});
+
+sfxVolumeSliderEl.addEventListener("input", (event) => {
+  setSfxVolume(event.target.value);
 });
 
 difficultyListEl.addEventListener("click", (event) => {
@@ -5080,6 +5415,29 @@ difficultyListEl.addEventListener("click", (event) => {
     return;
   }
   setDifficulty(option.dataset.difficulty);
+});
+
+musicPackGridEl.addEventListener("click", (event) => {
+  if (event.target.closest(".music-composer-link")) {
+    return;
+  }
+  const option = event.target.closest(".music-pack-option");
+  if (!option) {
+    return;
+  }
+  setMusicPack(option.dataset.musicPack);
+});
+
+musicPackGridEl.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") {
+    return;
+  }
+  const option = event.target.closest(".music-pack-option");
+  if (!option) {
+    return;
+  }
+  event.preventDefault();
+  setMusicPack(option.dataset.musicPack);
 });
 
 artPackGridEl.addEventListener("click", (event) => {

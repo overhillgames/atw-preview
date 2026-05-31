@@ -65,7 +65,9 @@
         </div>
         <div class="menu-meta" id="menu-meta"></div>
         <div class="menu-options-entry">
-          <button id="open-options-btn" class="secondary" type="button">Options</button>
+          <button id="open-difficulty-options-btn" class="secondary" type="button">Difficulty</button>
+          <button id="open-music-options-btn" class="secondary" type="button">Music</button>
+          <button id="open-art-options-btn" class="secondary" type="button">Art</button>
           <p class="menu-footer">Set difficulty, choose art and music.</p>
         </div>
       </div>
@@ -113,13 +115,13 @@
       </section>
     </section>
 
-    <section class="screen options-screen hidden" id="options-screen" aria-labelledby="options-title">
+    <section class="screen options-screen hidden" id="difficulty-options-screen" aria-labelledby="difficulty-options-title">
       <div class="section-topline">
         <div>
           <p class="eyebrow">Options</p>
-          <h1 id="options-title">Match Settings</h1>
+          <h1 id="difficulty-options-title">Difficulty</h1>
         </div>
-        <button id="options-back-btn" class="secondary" type="button">Back</button>
+        <button class="options-back-btn secondary" type="button">Back</button>
       </div>
 
       <section class="panel options-panel" aria-labelledby="difficulty-title">
@@ -145,6 +147,53 @@
           </button>
         </div>
       </section>
+    </section>
+
+    <section class="screen options-screen hidden" id="music-options-screen" aria-labelledby="music-options-title">
+      <div class="section-topline">
+        <div>
+          <p class="eyebrow">Options</p>
+          <h1 id="music-options-title">Music</h1>
+        </div>
+        <button class="options-back-btn secondary" type="button">Back</button>
+      </div>
+
+      <section class="panel options-panel music-options-panel" aria-labelledby="music-volume-title">
+        <div class="panel-header">
+          <h2 id="music-volume-title">Volume</h2>
+          <p>Balance background music and gameplay sound effects.</p>
+        </div>
+        <div class="volume-controls">
+          <label class="volume-control" for="music-volume-slider">
+            <span>Music</span>
+            <input id="music-volume-slider" type="range" min="0" max="100" step="1" />
+            <output id="music-volume-value" for="music-volume-slider">80%</output>
+          </label>
+          <label class="volume-control" for="sfx-volume-slider">
+            <span>Sound Effects</span>
+            <input id="sfx-volume-slider" type="range" min="0" max="100" step="1" />
+            <output id="sfx-volume-value" for="sfx-volume-slider">85%</output>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel options-panel music-options-panel" aria-labelledby="music-title">
+        <div class="panel-header">
+          <h2 id="music-title">Music</h2>
+          <p id="music-summary">Choose the composer pack for battle music.</p>
+        </div>
+        <div class="music-pack-grid" id="music-pack-grid" role="radiogroup" aria-labelledby="music-title"></div>
+      </section>
+    </section>
+
+    <section class="screen options-screen hidden" id="art-options-screen" aria-labelledby="art-options-title">
+      <div class="section-topline">
+        <div>
+          <p class="eyebrow">Options</p>
+          <h1 id="art-options-title">Art</h1>
+        </div>
+        <button class="options-back-btn secondary" type="button">Back</button>
+      </div>
 
       <section class="panel options-panel art-options-panel" aria-labelledby="art-title">
         <div class="panel-header">
@@ -337,8 +386,9 @@
         "play-match-btn": () => window.startNewMatch?.(),
         "resume-match-btn": () => window.setScreen?.("game"),
         "open-records-btn": () => window.setScreen?.("records"),
-        "open-options-btn": () => window.setScreen?.("options"),
-        "options-back-btn": () => window.setScreen?.("menu"),
+        "open-difficulty-options-btn": () => window.setScreen?.("difficultyOptions"),
+        "open-music-options-btn": () => window.setScreen?.("musicOptions"),
+        "open-art-options-btn": () => window.setScreen?.("artOptions"),
         "records-back-btn": () => window.setScreen?.("menu"),
         "match-play-again-btn": () => window.startNewMatch?.(),
         "match-home-btn": () => window.setScreen?.("menu")
@@ -348,6 +398,9 @@
         const button = event.target.closest("button");
         const action = button && fallbackActions[button.id];
         if (!action) {
+          if (button?.classList.contains("options-back-btn")) {
+            window.setScreen?.("menu");
+          }
           return;
         }
         event.preventDefault();

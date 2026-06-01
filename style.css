@@ -309,6 +309,10 @@ select {
 
 .options-screen {
   padding: 0.4rem 0 1rem;
+  max-height: calc(var(--app-height) - 2rem - var(--safe-top) - var(--safe-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .section-topline,
@@ -1511,11 +1515,14 @@ button:disabled {
 
   .records-grid,
   .difficulty-list,
-  .music-pack-grid,
-  .art-pack-grid,
   .value-grid,
   .match-summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .music-pack-grid,
+  .art-pack-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .menu-options-entry {
@@ -1657,6 +1664,10 @@ button:disabled {
 
   .screen {
     min-height: calc(var(--app-height) - 1.5rem - var(--safe-top) - var(--safe-bottom));
+  }
+
+  .options-screen {
+    max-height: calc(var(--app-height) - 1.5rem - var(--safe-top) - var(--safe-bottom));
   }
 
   .section-topline {

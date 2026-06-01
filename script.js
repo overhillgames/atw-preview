@@ -47,6 +47,27 @@ let BATTLEFIELD_TOWER_MARKER_PATH = "assets/ui/markers/battlefield-tower-marker.
 let BATTLEFIELD_TOWER_MARKER_SIZE = 48;
 const TOWER_RENDER_BOX_WIDTH = 64;
 const TOWER_RENDER_BOX_HEIGHT = 78;
+const TOWER_SHADOW_LENGTH_RATIO = TOWER_RENDER_BOX_HEIGHT / TOWER_RENDER_BOX_WIDTH;
+const OBJECT_SHADOWS = {
+  color: "0, 0, 0",
+  minAlpha: 0.24,
+  maxAlpha: 0.34,
+  minWidthScale: 0.98,
+  maxWidthScale: 0.82,
+  minHeightScale: 0.9,
+  maxHeightScale: 3.15,
+  creep: {
+    widthRatio: 0.68,
+    heightRatio: 0.2,
+    yOffsetRatio: 0.34
+  },
+  tower: {
+    widthRatio: 0.72,
+    heightRatio: 0.18 * TOWER_SHADOW_LENGTH_RATIO,
+    yOffsetRatio: 0.42,
+    maxDepth: 0.81
+  }
+};
 const DEFAULT_TOWER_CARD_CENTERS = [
   { x: 161, y: 691 },
   { x: 237, y: 691 },
@@ -316,7 +337,7 @@ const DEFAULT_OPTIONS = {
   difficulty: "yellow",
   artPack: "unfuneralOD",
   musicPack: "christopherJosephUehlein",
-  musicVolume: 80,
+  musicVolume: 20,
   sfxVolume: 85
 };
 const ART_PACK_OPTIONS = [
@@ -4889,6 +4910,76 @@ function drawTowerRanges() {
   }
 }
 
+function getBattlefieldDepth(yNorm) {
+  const y = yNorm * LOGICAL_CANVAS_HEIGHT;
+  const top = BATTLEFIELD_BOUNDS.y;
+  const bottom = BATTLEFIELD_BOUNDS.y + BATTLEFIELD_BOUNDS.height;
+  return 1 - clamp((y - top) / Math.max(1, bottom - top), 0, 1);
+}
+
+function drawSoftOvalShadow(x, y, width, height, alpha) {
+  const color = OBJECT_SHADOWS.color;
+  ctx.save();
+  ctx.fillStyle = `rgba(${color}, ${alpha * 0.48})`;
+  ctx.beginPath();
+  ctx.ellipse(x, y, width * 0.62, height * 0.62, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = `rgba(${color}, ${alpha * 0.3})`;
+  ctx.beginPath();
+  ctx.ellipse(x, y, width * 0.82, height * 0.82, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawObjectShadow(xNorm, yNorm, renderWidth, renderHeight, kind) {
+  const cfg = OBJECT_SHADOWS[kind] || OBJECT_SHADOWS.creep;
+  const depth = Math.min(getBattlefieldDepth(yNorm), cfg.maxDepth ?? 1);
+  const widthScale = OBJECT_SHADOWS.minWidthScale + (OBJECT_SHADOWS.maxWidthScale - OBJECT_SHADOWS.minWidthScale) * depth;
+  const heightScale = OBJECT_SHADOWS.minHeightScale + (OBJECT_SHADOWS.maxHeightScale - OBJECT_SHADOWS.minHeightScale) * depth;
+  const alpha = OBJECT_SHADOWS.minAlpha + (OBJECT_SHADOWS.maxAlpha - OBJECT_SHADOWS.minAlpha) * depth;
+  const x = canvas.width * xNorm;
+  const y = canvas.height * yNorm + renderHeight * cfg.yOffsetRatio;
+  const width = renderWidth * cfg.widthRatio * widthScale;
+  const height = renderHeight * cfg.heightRatio * heightScale;
+  drawSoftOvalShadow(x, y, width, height, alpha);
+}
+
+function drawTowerShadows() {
+  const drawTowerShadow = (tower, pos, yOffset = 0) => {
+    if (!tower) {
+      return;
+    }
+    const levelScale = Math.max(1, Number(tower.level) || 1) > 1 ? 1.16 : 1;
+    drawObjectShadow(
+      pos.x,
+      (pos.y * LOGICAL_CANVAS_HEIGHT + yOffset) / LOGICAL_CANVAS_HEIGHT,
+      TOWER_RENDER_BOX_WIDTH * levelScale,
+      TOWER_RENDER_BOX_HEIGHT * levelScale,
+      "tower"
+    );
+  };
+
+  for (let i = 0; i < 5; i += 1) {
+    drawTowerShadow(state.aiTowers[i], towerPosAI[i]);
+    drawTowerShadow(state.playerTowers[i], towerPosPlayer[i], -6);
+  }
+}
+
+function drawAttackerShadows(units) {
+  for (const unit of units) {
+    const pos = attackerPosition(unit);
+    const spriteCfg = attackerSpriteConfig[unit.defId];
+    drawObjectShadow(
+      pos.x,
+      pos.y,
+      spriteCfg?.renderWidth || 42,
+      spriteCfg?.renderHeight || 42,
+      "creep"
+    );
+  }
+}
+
 function drawAttackers(units) {
   for (const unit of units) {
     const pos = attackerPosition(unit);
@@ -5265,6 +5356,9 @@ function drawBoard() {
     drawTowerRanges();
     drawTankCreepRanges();
   }
+  drawTowerShadows();
+  drawAttackerShadows(state.attackersPlayer);
+  drawAttackerShadows(state.attackersAI);
   drawAttackers(state.attackersPlayer);
   drawAttackers(state.attackersAI);
   drawProjectiles();

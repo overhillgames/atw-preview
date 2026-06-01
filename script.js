@@ -3130,7 +3130,7 @@ function applyProjectileDamage(target, damage, towerId, owner, allowAoe = true, 
   }
   if (towerId === "red" && allowAoe) {
     const appliedShrapnelMultiplier = Number.isFinite(shrapnelDamageMultiplierForHit) ? shrapnelDamageMultiplierForHit : 1;
-    spawnRedAoeBursts(target, damage * 0.33 * appliedShrapnelMultiplier, target.id);
+    spawnRedAoeBursts(target, damage * 0.33 * appliedShrapnelMultiplier, target.id, owner);
   }
   if (target.hp <= 0 && !target.isDefeated) {
     target.isDefeated = true;
@@ -3216,7 +3216,7 @@ function updateTankCreepFire(dt) {
   shootFrom(state.attackersAI, state.attackersPlayer, "ai");
 }
 
-function spawnRedAoeBursts(centerUnit, splashDamage, ignoreUnitId) {
+function spawnRedAoeBursts(centerUnit, splashDamage, ignoreUnitId, sourceOwner) {
   const origin = attackerPosition(centerUnit);
   const groupId = state.nextFireBurstId;
   state.nextFireBurstId += 1;
@@ -3239,7 +3239,7 @@ function spawnRedAoeBursts(centerUnit, splashDamage, ignoreUnitId) {
         maxLife: life,
         groupId,
         splashDamage,
-        sourceOwner: centerUnit.owner,
+        sourceOwner,
         ignoreUnitId,
         hitIds: []
       });

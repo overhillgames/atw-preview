@@ -87,6 +87,15 @@ select {
     calc(1rem + var(--safe-left));
 }
 
+.app-shell:not(.game-active) {
+  height: var(--app-height);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
 .app-shell.game-active {
   display: grid;
   justify-items: center;

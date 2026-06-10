@@ -856,6 +856,9 @@ function preventBrowserGestures(event) {
   if (!appShellEl.contains(event.target)) {
     return;
   }
+  if (event.type === "touchmove" && state.screen !== "game" && !touchDragState) {
+    return;
+  }
   event.preventDefault();
 }
 
@@ -1661,6 +1664,11 @@ function setScreen(screen) {
   refreshRecordsUI();
   updateOrientationNotice();
   requestAnimationFrame(resizeBattlefieldFrame);
+  if (screen !== "game") {
+    requestAnimationFrame(() => {
+      appShellEl.scrollTop = 0;
+    });
+  }
   syncMusicPlaybackForScreen();
 }
 

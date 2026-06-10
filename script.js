@@ -702,6 +702,9 @@ const slotPosPlayer = towerPosPlayer;
 const slotPosAI = towerPosAI;
 let persistentStats = createEmptyPersistentStats();
 let statsSaveTimeout = null;
+const usesPackagedAndroidRuntime = window.location.protocol === "https:" && window.location.hostname === "localhost";
+let lastHudDomSignature = "";
+let legacyCanvasWasActive = true;
 let gameFrameLayout = {
   viewportWidth: LOGICAL_CANVAS_WIDTH,
   viewportHeight: LOGICAL_CANVAS_HEIGHT,
@@ -991,14 +994,16 @@ function normalizePersistentStats(raw) {
 }
 
 async function loadPersistentStats() {
-  try {
-    const response = await fetch("./stats", { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`Stats load failed: ${response.status}`);
+  if (!usesPackagedAndroidRuntime) {
+    try {
+      const response = await fetch("./stats", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`Stats load failed: ${response.status}`);
+      }
+      persistentStats = normalizePersistentStats(await response.json());
+      return;
+    } catch {
     }
-    persistentStats = normalizePersistentStats(await response.json());
-    return;
-  } catch {
   }
 
   try {
@@ -1018,17 +1023,19 @@ async function persistStatsNow() {
   persistentStats.updatedAt = new Date().toISOString();
   const body = JSON.stringify(persistentStats, null, 2);
 
-  try {
-    const response = await fetch("./stats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body
-    });
-    if (!response.ok) {
-      throw new Error(`Stats save failed: ${response.status}`);
+  if (!usesPackagedAndroidRuntime) {
+    try {
+      const response = await fetch("./stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body
+      });
+      if (!response.ok) {
+        throw new Error(`Stats save failed: ${response.status}`);
+      }
+      return;
+    } catch {
     }
-    return;
-  } catch {
   }
 
   try {
@@ -2326,6 +2333,25 @@ function syncPauseButtons() {
 }
 
 function refreshHUD() {
+  const hudSignature = [
+    state.screen,
+    state.waveNumber,
+    state.phase,
+    state.phase === "prep" ? state.phaseTimer.toFixed(1) : "",
+    state.playerMana,
+    state.aiMana,
+    state.playerScore,
+    state.aiScore,
+    state.gameOver ? "over" : "active",
+    state.paused ? "paused" : "running",
+    state.battleSkipUsedThisRound ? "skip-used" : "skip-ready",
+    multiplayerRole || ""
+  ].join("|");
+  if (hudSignature === lastHudDomSignature) {
+    return;
+  }
+  lastHudDomSignature = hudSignature;
+
   playerScoreEl.textContent = String(state.playerScore);
   aiScoreEl.textContent = String(state.aiScore);
   waveNumberEl.textContent = String(state.waveNumber);
@@ -5351,23 +5377,43 @@ function drawRoundBanner() {
 
 function drawBoard() {
   ensurePixiViewport();
-  drawLane();
-  if (SHOW_RANGE_ARCS) {
-    drawTowerRanges();
-    drawTankCreepRanges();
+  const legacyCanvasIsActive = state.phase === "battle"
+    || state.phase === "banner"
+    || SHOW_RANGE_ARCS
+    || !!selectedTowerId
+    || state.attackersPlayer.length > 0
+    || state.attackersAI.length > 0
+    || state.projectiles.length > 0
+    || state.fireBursts.length > 0
+    || state.yellowLeaps.length > 0
+    || state.towerFlashes.length > 0
+    || state.deathParticles.length > 0;
+
+  if (legacyCanvasIsActive) {
+    drawLane();
+    if (SHOW_RANGE_ARCS) {
+      drawTowerRanges();
+      drawTankCreepRanges();
+    }
+    drawTowerShadows();
+    drawAttackerShadows(state.attackersPlayer);
+    drawAttackerShadows(state.attackersAI);
+    drawAttackers(state.attackersPlayer);
+    drawAttackers(state.attackersAI);
+    drawProjectiles();
+    drawFireBursts();
+    drawYellowLeaps();
+    drawTowerFlashes();
+    drawDeathParticles();
+    drawRoundBanner();
+    updatePixiDynamicTexture();
+    legacyCanvasWasActive = true;
+  } else if (legacyCanvasWasActive) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    updatePixiDynamicTexture();
+    legacyCanvasWasActive = false;
   }
-  drawTowerShadows();
-  drawAttackerShadows(state.attackersPlayer);
-  drawAttackerShadows(state.attackersAI);
-  drawAttackers(state.attackersPlayer);
-  drawAttackers(state.attackersAI);
-  drawProjectiles();
-  drawFireBursts();
-  drawYellowLeaps();
-  drawTowerFlashes();
-  drawDeathParticles();
-  drawRoundBanner();
-  updatePixiDynamicTexture();
+
   updatePixiTowers();
   updatePixiTimerFill();
   updatePixiCardStates();

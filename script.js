@@ -340,6 +340,27 @@ const DEFAULT_OPTIONS = {
   musicVolume: 20,
   sfxVolume: 85
 };
+const GAUNTLET_STORAGE_KEY = "lineTowerWarsGauntlet";
+const GAUNTLET_MAP_WIDTH = 630;
+const GAUNTLET_MAP_HEIGHT = 1520;
+const GAUNTLET_STAGES = [
+  { id: "marker-01", difficulty: "purple", x: 311.5, y: 1415.5 },
+  { id: "marker-02", difficulty: "purple", x: 455.5, y: 1319.5 },
+  { id: "marker-03", difficulty: "yellow", x: 215.5, y: 1271.5 },
+  { id: "marker-04", difficulty: "yellow", x: 167.5, y: 1175.5 },
+  { id: "marker-05", difficulty: "yellow", x: 311.5, y: 1127.5 },
+  { id: "marker-06", difficulty: "red", x: 455.5, y: 1031.5 },
+  { id: "marker-07", difficulty: "red", x: 359.5, y: 983.5 },
+  { id: "marker-08", difficulty: "red", x: 263.5, y: 887.5 },
+  { id: "marker-09", difficulty: "green", x: 167.5, y: 791.5 },
+  { id: "marker-10", difficulty: "green", x: 359.5, y: 695.5 },
+  { id: "marker-11", difficulty: "green", x: 455.5, y: 551.5 },
+  { id: "marker-12", difficulty: "green", x: 407.5, y: 455.5 },
+  { id: "marker-13", difficulty: "blue", x: 215.5, y: 407.5 },
+  { id: "marker-14", difficulty: "blue", x: 311.5, y: 311.5 },
+  { id: "marker-15", difficulty: "blue", x: 311.5, y: 215.5 },
+  { id: "marker-16", difficulty: "blue", x: 311.5, y: 71.5 }
+];
 const ART_PACK_OPTIONS = [
   { id: "classic", name: "Classic", unlocked: true, preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
   { id: "jonCarling", name: "Jon Carling", unlocked: true, icon: "assets/ui/artist-icons/joncarling.png", instagram: "https://www.instagram.com/joncarling/", quadBackground: "assets/arena/quad-backgrounds/joncarling.png", preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
@@ -476,6 +497,7 @@ document.documentElement.dataset.artPack = activeArtPackId;
 applyArtPack(activeArtPackId);
 
 const menuScreenEl = document.getElementById("menu-screen");
+const gauntletScreenEl = document.getElementById("gauntlet-screen");
 const difficultyOptionsScreenEl = document.getElementById("difficulty-options-screen");
 const musicOptionsScreenEl = document.getElementById("music-options-screen");
 const artOptionsScreenEl = document.getElementById("art-options-screen");
@@ -484,6 +506,7 @@ const gameScreenEl = document.getElementById("game-screen");
 const appShellEl = document.getElementById("app-shell");
 const orientationNoticeEl = document.getElementById("orientation-notice");
 const playMatchBtnEl = document.getElementById("play-match-btn");
+const openGauntletBtnEl = document.getElementById("open-gauntlet-btn");
 const openDifficultyOptionsBtnEl = document.getElementById("open-difficulty-options-btn");
 const openMusicOptionsBtnEl = document.getElementById("open-music-options-btn");
 const openArtOptionsBtnEl = document.getElementById("open-art-options-btn");
@@ -500,6 +523,14 @@ const artPackGridEl = document.getElementById("art-pack-grid");
 const resumeMatchBtnEl = document.getElementById("resume-match-btn");
 const openRecordsBtnEl = document.getElementById("open-records-btn");
 const recordsBackBtnEl = document.getElementById("records-back-btn");
+const gauntletBackBtnEl = document.getElementById("gauntlet-back-btn");
+const gauntletStartBtnEl = document.getElementById("gauntlet-start-btn");
+const gauntletStageTitleEl = document.getElementById("gauntlet-stage-title");
+const gauntletStageCopyEl = document.getElementById("gauntlet-stage-copy");
+const gauntletStageListEl = document.getElementById("gauntlet-stage-list");
+const gauntletMapTrackEl = document.getElementById("gauntlet-map-track");
+const gauntletMarkerLayerEl = document.getElementById("gauntlet-marker-layer");
+const gauntletOrbEl = document.getElementById("gauntlet-orb");
 const menuMetaEl = document.getElementById("menu-meta");
 const recordsUpdatedAtEl = document.getElementById("records-updated-at");
 const recordsOverviewEl = document.getElementById("records-overview");
@@ -623,9 +654,15 @@ const state = {
   roundManaBonusPending: {
     player: 0,
     ai: 0
-  }
+  },
+  gauntletRun: null,
+  aiDifficultyOverride: ""
 };
 
+let gauntletProgress = {
+  unlockedStage: 0
+};
+let gauntletTravelFromStage = null;
 let activeDragPayload = "";
 let selectedTowerId = null;
 let touchDragState = null;
@@ -702,9 +739,6 @@ const slotPosPlayer = towerPosPlayer;
 const slotPosAI = towerPosAI;
 let persistentStats = createEmptyPersistentStats();
 let statsSaveTimeout = null;
-const usesPackagedAndroidRuntime = window.location.protocol === "https:" && window.location.hostname === "localhost";
-let lastHudDomSignature = "";
-let legacyCanvasWasActive = true;
 let gameFrameLayout = {
   viewportWidth: LOGICAL_CANVAS_WIDTH,
   viewportHeight: LOGICAL_CANVAS_HEIGHT,
@@ -997,16 +1031,14 @@ function normalizePersistentStats(raw) {
 }
 
 async function loadPersistentStats() {
-  if (!usesPackagedAndroidRuntime) {
-    try {
-      const response = await fetch("./stats", { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`Stats load failed: ${response.status}`);
-      }
-      persistentStats = normalizePersistentStats(await response.json());
-      return;
-    } catch {
+  try {
+    const response = await fetch("./stats", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Stats load failed: ${response.status}`);
     }
+    persistentStats = normalizePersistentStats(await response.json());
+    return;
+  } catch {
   }
 
   try {
@@ -1026,19 +1058,17 @@ async function persistStatsNow() {
   persistentStats.updatedAt = new Date().toISOString();
   const body = JSON.stringify(persistentStats, null, 2);
 
-  if (!usesPackagedAndroidRuntime) {
-    try {
-      const response = await fetch("./stats", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body
-      });
-      if (!response.ok) {
-        throw new Error(`Stats save failed: ${response.status}`);
-      }
-      return;
-    } catch {
+  try {
+    const response = await fetch("./stats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body
+    });
+    if (!response.ok) {
+      throw new Error(`Stats save failed: ${response.status}`);
     }
+    return;
+  } catch {
   }
 
   try {
@@ -1105,6 +1135,8 @@ function saveMatchStateNow() {
     matchUsage: state.matchUsage,
     soundCooldowns: state.soundCooldowns,
     roundManaBonusPending: state.roundManaBonusPending,
+    gauntletRun: state.gauntletRun,
+    aiDifficultyOverride: state.aiDifficultyOverride,
     hasActiveMatch: state.hasActiveMatch
   };
 
@@ -1180,6 +1212,10 @@ function restoreSavedMatchState() {
     state.gameOver = false;
     state.hasActiveMatch = true;
     state.paused = true;
+    state.gauntletRun = state.gauntletRun && Number.isFinite(state.gauntletRun.stageIndex)
+      ? { stageIndex: clamp(Math.floor(state.gauntletRun.stageIndex), 0, GAUNTLET_STAGES.length - 1) }
+      : null;
+    state.aiDifficultyOverride = AI_DIFFICULTY_SETTINGS[state.aiDifficultyOverride] ? state.aiDifficultyOverride : "";
     refreshAllUI();
     return true;
   } catch {
@@ -1492,7 +1528,8 @@ function applyArtPack(artPackId, rerender = false) {
 }
 
 function getAIDifficultySettings() {
-  return AI_DIFFICULTY_SETTINGS[gameOptions.difficulty] || AI_DIFFICULTY_SETTINGS[DEFAULT_OPTIONS.difficulty];
+  const difficultyId = state.aiDifficultyOverride || gameOptions.difficulty;
+  return AI_DIFFICULTY_SETTINGS[difficultyId] || AI_DIFFICULTY_SETTINGS[DEFAULT_OPTIONS.difficulty];
 }
 
 function getAIManaBonusPerRound() {
@@ -1541,6 +1578,110 @@ function saveOptions() {
     localStorage.setItem(OPTIONS_STORAGE_KEY, JSON.stringify(gameOptions));
   } catch {
   }
+}
+
+function loadGauntletProgress() {
+  try {
+    const raw = localStorage.getItem(GAUNTLET_STORAGE_KEY);
+    if (!raw) {
+      gauntletProgress = { unlockedStage: 0 };
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    gauntletProgress = {
+      unlockedStage: clamp(Math.floor(Number(parsed.unlockedStage) || 0), 0, GAUNTLET_STAGES.length - 1)
+    };
+  } catch {
+    gauntletProgress = { unlockedStage: 0 };
+  }
+}
+
+function saveGauntletProgress() {
+  try {
+    localStorage.setItem(GAUNTLET_STORAGE_KEY, JSON.stringify(gauntletProgress));
+  } catch {
+  }
+}
+
+function getGauntletStage(index = gauntletProgress.unlockedStage) {
+  return GAUNTLET_STAGES[clamp(index, 0, GAUNTLET_STAGES.length - 1)];
+}
+
+function getGauntletStagePercent(stage) {
+  return {
+    x: stage.x / GAUNTLET_MAP_WIDTH * 100,
+    y: stage.y / GAUNTLET_MAP_HEIGHT * 100
+  };
+}
+
+function focusGauntletViewport(stageIndex = gauntletProgress.unlockedStage) {
+  if (!gauntletMapTrackEl) {
+    return;
+  }
+  const viewportEl = document.getElementById("gauntlet-map-viewport");
+  if (!viewportEl) {
+    return;
+  }
+  const stage = getGauntletStage(stageIndex);
+  const viewportHeight = viewportEl.clientHeight;
+  const trackHeight = gauntletMapTrackEl.getBoundingClientRect().height;
+  if (!viewportHeight || !trackHeight) {
+    return;
+  }
+  const stageY = stage.y / GAUNTLET_MAP_HEIGHT * trackHeight;
+  const targetY = viewportHeight * 0.66;
+  const minOffset = Math.min(0, viewportHeight - trackHeight);
+  const offsetY = clamp(targetY - stageY, minOffset, 0);
+  gauntletMapTrackEl.style.setProperty("--gauntlet-scroll-y", `${offsetY.toFixed(1)}px`);
+}
+
+function refreshGauntletUI() {
+  if (!gauntletScreenEl) {
+    return;
+  }
+  const stageIndex = clamp(gauntletProgress.unlockedStage, 0, GAUNTLET_STAGES.length - 1);
+  const stage = getGauntletStage(stageIndex);
+  const stagePercent = getGauntletStagePercent(stage);
+  if (gauntletOrbEl) {
+    const fromStage = gauntletTravelFromStage !== null ? getGauntletStage(gauntletTravelFromStage) : null;
+    const fromPercent = fromStage ? getGauntletStagePercent(fromStage) : null;
+    gauntletOrbEl.style.left = `${(fromPercent || stagePercent).x}%`;
+    gauntletOrbEl.style.top = `${(fromPercent || stagePercent).y}%`;
+    if (fromPercent) {
+      requestAnimationFrame(() => {
+        gauntletOrbEl.style.left = `${stagePercent.x}%`;
+        gauntletOrbEl.style.top = `${stagePercent.y}%`;
+        gauntletTravelFromStage = null;
+      });
+    }
+  }
+  if (gauntletMarkerLayerEl) {
+    gauntletMarkerLayerEl.innerHTML = GAUNTLET_STAGES.map((item, index) => {
+      const stateName = index < stageIndex ? "complete" : index === stageIndex ? "current" : "pending";
+      const percent = getGauntletStagePercent(item);
+      return `
+        <div class="gauntlet-marker ${stateName}" style="left: ${percent.x}%; top: ${percent.y}%;"></div>
+      `;
+    }).join("");
+  }
+  if (gauntletStartBtnEl) {
+    gauntletStartBtnEl.textContent = "Engage";
+  }
+  requestAnimationFrame(() => focusGauntletViewport(stageIndex));
+}
+
+function advanceGauntletAfterVictory(stageIndex) {
+  if (!Number.isFinite(stageIndex)) {
+    return false;
+  }
+  const nextStageIndex = clamp(stageIndex + 1, 0, GAUNTLET_STAGES.length - 1);
+  if (nextStageIndex <= gauntletProgress.unlockedStage) {
+    return false;
+  }
+  gauntletTravelFromStage = stageIndex;
+  gauntletProgress.unlockedStage = nextStageIndex;
+  saveGauntletProgress();
+  return true;
 }
 
 function setDifficulty(difficulty) {
@@ -1647,6 +1788,7 @@ function refreshRecordsUI() {
 
 function refreshMetaUI() {
   refreshMenuUI();
+  refreshGauntletUI();
   refreshOptionsUI();
   refreshRecordsUI();
 }
@@ -1654,6 +1796,7 @@ function refreshMetaUI() {
 function setScreen(screen) {
   state.screen = screen;
   menuScreenEl.classList.toggle("hidden", screen !== "menu");
+  gauntletScreenEl.classList.toggle("hidden", screen !== "gauntlet");
   difficultyOptionsScreenEl.classList.toggle("hidden", screen !== "difficultyOptions");
   musicOptionsScreenEl.classList.toggle("hidden", screen !== "musicOptions");
   artOptionsScreenEl.classList.toggle("hidden", screen !== "artOptions");
@@ -1664,6 +1807,9 @@ function setScreen(screen) {
   refreshRecordsUI();
   updateOrientationNotice();
   requestAnimationFrame(resizeBattlefieldFrame);
+  if (screen === "gauntlet") {
+    requestAnimationFrame(() => focusGauntletViewport());
+  }
   if (screen !== "game") {
     requestAnimationFrame(() => {
       appShellEl.scrollTop = 0;
@@ -1888,9 +2034,13 @@ function resetMatch() {
   syncPauseButtons();
 }
 
-function startNewMatch() {
+function startNewMatch(options = {}) {
   clearSavedMatchState();
   resetMatch();
+  state.gauntletRun = options.gauntlet
+    ? { stageIndex: clamp(Math.floor(Number(options.stageIndex) || 0), 0, GAUNTLET_STAGES.length - 1) }
+    : null;
+  state.aiDifficultyOverride = options.difficulty || "";
   state.paused = false;
   setScreen("game");
   lockLandscapeOrientation();
@@ -1898,8 +2048,20 @@ function startNewMatch() {
   refreshAllUI();
 }
 
+function startGauntletChallenge() {
+  const stageIndex = clamp(gauntletProgress.unlockedStage, 0, GAUNTLET_STAGES.length - 1);
+  const stage = getGauntletStage(stageIndex);
+  startNewMatch({
+    gauntlet: true,
+    stageIndex,
+    difficulty: stage.difficulty
+  });
+  updateStatus(`Gauntlet battle ${stageIndex + 1}.`);
+}
+
 window.setScreen = setScreen;
 window.startNewMatch = startNewMatch;
+window.startGauntletChallenge = startGauntletChallenge;
 
 function createTowerSlots() {
   enemySlotsEl.innerHTML = "";
@@ -2341,25 +2503,6 @@ function syncPauseButtons() {
 }
 
 function refreshHUD() {
-  const hudSignature = [
-    state.screen,
-    state.waveNumber,
-    state.phase,
-    state.phase === "prep" ? state.phaseTimer.toFixed(1) : "",
-    state.playerMana,
-    state.aiMana,
-    state.playerScore,
-    state.aiScore,
-    state.gameOver ? "over" : "active",
-    state.paused ? "paused" : "running",
-    state.battleSkipUsedThisRound ? "skip-used" : "skip-ready",
-    multiplayerRole || ""
-  ].join("|");
-  if (hudSignature === lastHudDomSignature) {
-    return;
-  }
-  lastHudDomSignature = hudSignature;
-
   playerScoreEl.textContent = String(state.playerScore);
   aiScoreEl.textContent = String(state.aiScore);
   waveNumberEl.textContent = String(state.waveNumber);
@@ -2693,9 +2836,30 @@ function finishMatch() {
   commitMatchUsageStats();
   queueStatsSave();
   state.hasActiveMatch = false;
+  const gauntletRun = state.gauntletRun;
+  const gauntletAdvanced = state.matchWinner === "player"
+    && gauntletRun
+    && advanceGauntletAfterVictory(gauntletRun.stageIndex);
+  const shouldReturnToGauntlet = gauntletRun && state.matchWinner === "player";
   state.matchSummary = buildMatchSummary();
+  if (gauntletRun) {
+    state.matchSummary.nextGoal = gauntletAdvanced
+      ? `Gauntlet advanced from battle ${gauntletRun.stageIndex + 1} to battle ${gauntletProgress.unlockedStage + 1}.`
+      : state.matchWinner === "player"
+        ? `Battle ${gauntletRun.stageIndex + 1} is cleared.`
+        : `Gauntlet holds at battle ${gauntletRun.stageIndex + 1}.`;
+    state.matchSummary.stats = [
+      ...state.matchSummary.stats,
+      { label: "Gauntlet", value: gauntletAdvanced ? "Advanced" : `Battle ${gauntletRun.stageIndex + 1}` }
+    ];
+  }
+  state.gauntletRun = null;
+  state.aiDifficultyOverride = "";
   clearSavedMatchState();
   updateStatus(`${state.winnerText} Review the battle report or start a new match.`);
+  if (shouldReturnToGauntlet) {
+    setScreen("gauntlet");
+  }
   refreshAllUI();
 }
 
@@ -5385,43 +5549,23 @@ function drawRoundBanner() {
 
 function drawBoard() {
   ensurePixiViewport();
-  const legacyCanvasIsActive = state.phase === "battle"
-    || state.phase === "banner"
-    || SHOW_RANGE_ARCS
-    || !!selectedTowerId
-    || state.attackersPlayer.length > 0
-    || state.attackersAI.length > 0
-    || state.projectiles.length > 0
-    || state.fireBursts.length > 0
-    || state.yellowLeaps.length > 0
-    || state.towerFlashes.length > 0
-    || state.deathParticles.length > 0;
-
-  if (legacyCanvasIsActive) {
-    drawLane();
-    if (SHOW_RANGE_ARCS) {
-      drawTowerRanges();
-      drawTankCreepRanges();
-    }
-    drawTowerShadows();
-    drawAttackerShadows(state.attackersPlayer);
-    drawAttackerShadows(state.attackersAI);
-    drawAttackers(state.attackersPlayer);
-    drawAttackers(state.attackersAI);
-    drawProjectiles();
-    drawFireBursts();
-    drawYellowLeaps();
-    drawTowerFlashes();
-    drawDeathParticles();
-    drawRoundBanner();
-    updatePixiDynamicTexture();
-    legacyCanvasWasActive = true;
-  } else if (legacyCanvasWasActive) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    updatePixiDynamicTexture();
-    legacyCanvasWasActive = false;
+  drawLane();
+  if (SHOW_RANGE_ARCS) {
+    drawTowerRanges();
+    drawTankCreepRanges();
   }
-
+  drawTowerShadows();
+  drawAttackerShadows(state.attackersPlayer);
+  drawAttackerShadows(state.attackersAI);
+  drawAttackers(state.attackersPlayer);
+  drawAttackers(state.attackersAI);
+  drawProjectiles();
+  drawFireBursts();
+  drawYellowLeaps();
+  drawTowerFlashes();
+  drawDeathParticles();
+  drawRoundBanner();
+  updatePixiDynamicTexture();
   updatePixiTowers();
   updatePixiTimerFill();
   updatePixiCardStates();
@@ -5529,6 +5673,18 @@ resumeMatchBtnEl.addEventListener("click", () => {
 
 openRecordsBtnEl.addEventListener("click", () => {
   setScreen("records");
+});
+
+openGauntletBtnEl.addEventListener("click", () => {
+  setScreen("gauntlet");
+});
+
+gauntletBackBtnEl.addEventListener("click", () => {
+  setScreen("menu");
+});
+
+gauntletStartBtnEl.addEventListener("click", () => {
+  startGauntletChallenge();
 });
 
 openDifficultyOptionsBtnEl.addEventListener("click", () => {
@@ -5649,6 +5805,7 @@ createTowerSlots();
 setupArenaDrop();
 updateViewportHeight();
 loadOptions();
+loadGauntletProgress();
 createCards();
 loadPersistentStats();
 resetMatch();

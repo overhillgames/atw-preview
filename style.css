@@ -156,6 +156,7 @@ select {
 }
 
 .menu-screen,
+.gauntlet-screen,
 .records-screen,
 .options-screen {
   display: grid;
@@ -203,7 +204,8 @@ select {
 }
 
 .menu-hero h1,
-.records-screen h1 {
+.records-screen h1,
+.gauntlet-screen h1 {
   margin: 0;
   font-size: clamp(2.2rem, 5vw, 4.2rem);
   line-height: 0.96;
@@ -327,6 +329,13 @@ select {
   padding: 0.4rem 0 1rem;
 }
 
+.gauntlet-screen {
+  min-height: var(--app-height);
+  padding: 0;
+  align-content: center;
+  justify-items: center;
+}
+
 .options-screen {
   padding: 0.4rem 0 1rem;
   max-height: calc(var(--app-height) - 2rem - var(--safe-top) - var(--safe-bottom));
@@ -347,6 +356,150 @@ select {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.gauntlet-layout {
+  width: min(
+    calc(100vw - var(--safe-left) - var(--safe-right) - 1rem),
+    calc((var(--app-height) - var(--safe-top) - var(--safe-bottom) - 1rem) * var(--game-frame-aspect))
+  );
+  max-width: var(--game-frame-width);
+}
+
+.gauntlet-map-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--game-frame-aspect);
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(6, 15, 30, 0.78), rgba(6, 10, 22, 0.96)),
+    #07111f;
+  box-shadow: var(--shadow);
+}
+
+.gauntlet-map-track {
+  --gauntlet-scroll-y: 0px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  aspect-ratio: 630 / 1520;
+  transform: translateY(var(--gauntlet-scroll-y));
+  transition: transform 620ms ease;
+}
+
+.gauntlet-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  image-rendering: pixelated;
+}
+
+.gauntlet-layer-bleed {
+  opacity: 1;
+  image-rendering: auto;
+}
+
+.gauntlet-layer-road {
+  filter: drop-shadow(0 0 7px rgba(86, 104, 255, 0.62));
+}
+
+.gauntlet-marker-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.gauntlet-marker {
+  position: absolute;
+  width: 7.62%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border: 0;
+  border-radius: 999px;
+  background: #be3737;
+  box-shadow: 0 0 8px rgba(190, 55, 55, 0.42);
+}
+
+.gauntlet-marker.complete {
+  background: #7c828c;
+  box-shadow: none;
+}
+
+.gauntlet-marker.current {
+  background: #be3737;
+  box-shadow: 0 0 14px rgba(251, 113, 133, 0.65);
+}
+
+.gauntlet-marker.pending {
+  background: #be3737;
+}
+
+.gauntlet-orb {
+  position: absolute;
+  width: 7.62%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  z-index: 3;
+  background-image: url("assets/gauntlet/orb-sheet.png");
+  background-repeat: no-repeat;
+  background-size: 400% 100%;
+  image-rendering: pixelated;
+  animation:
+    gauntlet-orb-float 1.15s ease-in-out infinite alternate,
+    gauntlet-orb-frames 0.66s linear infinite;
+  transition: left 820ms ease, top 820ms ease;
+  pointer-events: none;
+  will-change: left, top, transform, background-position;
+}
+
+.gauntlet-map-mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 5.5rem;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.gauntlet-map-mask-top {
+  top: 0;
+  background: linear-gradient(180deg, rgba(4, 10, 22, 0.96), rgba(4, 10, 22, 0));
+}
+
+.gauntlet-map-mask-bottom {
+  bottom: 0;
+  background: linear-gradient(0deg, rgba(4, 10, 22, 0.78), rgba(4, 10, 22, 0));
+}
+
+.gauntlet-controls {
+  position: absolute;
+  left: max(0.8rem, var(--safe-left));
+  right: max(0.8rem, var(--safe-right));
+  bottom: max(0.8rem, var(--safe-bottom));
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  z-index: 5;
+}
+
+@keyframes gauntlet-orb-frames {
+  0%,
+  24.99% { background-position-x: 0%; }
+  25%,
+  49.99% { background-position-x: 33.3333%; }
+  50%,
+  74.99% { background-position-x: 66.6667%; }
+  75%,
+  100% { background-position-x: 100%; }
+}
+
+@keyframes gauntlet-orb-float {
+  from { transform: translate3d(-2px, -3px, 0); }
+  to { transform: translate3d(2px, 3px, 0); }
 }
 
 .stats-panel,
@@ -1568,7 +1721,8 @@ button:disabled {
   border-image-source: var(--ui-panel-secondary-frame);
 }
 
-.menu-screen button {
+.menu-screen button,
+.ui-menu-button {
   border: 8px solid transparent;
   border-image-slice: var(--ui-button-slice) fill;
   border-image-width: 8px;
@@ -1584,11 +1738,13 @@ button:disabled {
   image-rendering: pixelated;
 }
 
-.menu-screen button:not(.secondary) {
+.menu-screen button:not(.secondary),
+.ui-menu-button:not(.secondary) {
   border-image-source: var(--ui-button-primary-frame);
 }
 
-.menu-screen button.secondary {
+.menu-screen button.secondary,
+.ui-menu-button.secondary {
   border-image-source: var(--ui-button-secondary-frame);
   background:
     linear-gradient(rgba(62, 49, 74, 0.7), rgba(62, 49, 74, 0.7)),
@@ -1596,12 +1752,19 @@ button:disabled {
   background-size: auto, 128px 128px;
 }
 
-.menu-screen button:hover {
+.menu-screen button:hover,
+.ui-menu-button:hover {
   filter: brightness(1.12);
 }
 
-.menu-screen button:disabled {
+.menu-screen button:disabled,
+.ui-menu-button:disabled {
   filter: grayscale(0.35);
+}
+
+.gauntlet-controls .ui-menu-button {
+  min-width: 7.5rem;
+  backdrop-filter: blur(4px);
 }
 
 .menu-screen .menu-options-entry button {
@@ -1620,6 +1783,7 @@ button:disabled {
   }
 
   .records-grid,
+  .gauntlet-layout,
   .difficulty-list,
   .value-grid,
   .match-summary-grid {

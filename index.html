@@ -59,6 +59,7 @@
         </p>
         <div class="menu-actions">
           <button id="play-match-btn" type="button">Play vs AI</button>
+          <button id="open-gauntlet-btn" type="button">Gauntlet</button>
           <button id="find-match-btn" type="button">Find Match</button>
           <button id="resume-match-btn" class="secondary hidden" type="button">Resume Match</button>
           <button id="open-records-btn" class="secondary" type="button">View Records</button>
@@ -201,6 +202,25 @@
           <p id="art-summary">Choose the battlefield, tower, and creep skin set.</p>
         </div>
         <div class="art-pack-grid" id="art-pack-grid" role="radiogroup" aria-labelledby="art-title"></div>
+      </section>
+    </section>
+
+    <section class="screen gauntlet-screen hidden" id="gauntlet-screen" aria-label="Gauntlet map">
+      <section class="gauntlet-layout" aria-label="Gauntlet campaign map">
+        <div class="gauntlet-map-viewport" id="gauntlet-map-viewport">
+          <div class="gauntlet-map-track" id="gauntlet-map-track">
+            <img class="gauntlet-layer gauntlet-layer-bleed" src="assets/gauntlet/bleed.png" alt="" />
+            <img class="gauntlet-layer gauntlet-layer-road" src="assets/gauntlet/road-marker.png" alt="" />
+            <div class="gauntlet-marker-layer" id="gauntlet-marker-layer"></div>
+            <div class="gauntlet-orb" id="gauntlet-orb" aria-hidden="true"></div>
+          </div>
+          <div class="gauntlet-map-mask gauntlet-map-mask-top" aria-hidden="true"></div>
+          <div class="gauntlet-map-mask gauntlet-map-mask-bottom" aria-hidden="true"></div>
+          <div class="gauntlet-controls">
+            <button id="gauntlet-back-btn" class="ui-menu-button secondary" type="button">Back</button>
+            <button id="gauntlet-start-btn" class="ui-menu-button" type="button">Engage</button>
+          </div>
+        </div>
       </section>
     </section>
 
@@ -385,10 +405,13 @@
       const fallbackActions = {
         "play-match-btn": () => window.startNewMatch?.(),
         "resume-match-btn": () => window.setScreen?.("game"),
+        "open-gauntlet-btn": () => window.setScreen?.("gauntlet"),
         "open-records-btn": () => window.setScreen?.("records"),
         "open-difficulty-options-btn": () => window.setScreen?.("difficultyOptions"),
         "open-music-options-btn": () => window.setScreen?.("musicOptions"),
         "open-art-options-btn": () => window.setScreen?.("artOptions"),
+        "gauntlet-back-btn": () => window.setScreen?.("menu"),
+        "gauntlet-start-btn": () => window.startGauntletChallenge?.(),
         "records-back-btn": () => window.setScreen?.("menu"),
         "match-play-again-btn": () => window.startNewMatch?.(),
         "match-home-btn": () => window.setScreen?.("menu")

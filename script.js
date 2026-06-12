@@ -344,22 +344,22 @@ const GAUNTLET_STORAGE_KEY = "lineTowerWarsGauntlet";
 const GAUNTLET_MAP_WIDTH = 630;
 const GAUNTLET_MAP_HEIGHT = 1520;
 const GAUNTLET_STAGES = [
-  { id: "marker-01", difficulty: "purple", x: 311.5, y: 1415.5 },
-  { id: "marker-02", difficulty: "purple", x: 455.5, y: 1319.5 },
-  { id: "marker-03", difficulty: "yellow", x: 215.5, y: 1271.5 },
-  { id: "marker-04", difficulty: "yellow", x: 167.5, y: 1175.5 },
-  { id: "marker-05", difficulty: "yellow", x: 311.5, y: 1127.5 },
-  { id: "marker-06", difficulty: "red", x: 455.5, y: 1031.5 },
-  { id: "marker-07", difficulty: "red", x: 359.5, y: 983.5 },
-  { id: "marker-08", difficulty: "red", x: 263.5, y: 887.5 },
-  { id: "marker-09", difficulty: "green", x: 167.5, y: 791.5 },
-  { id: "marker-10", difficulty: "green", x: 359.5, y: 695.5 },
-  { id: "marker-11", difficulty: "green", x: 455.5, y: 551.5 },
-  { id: "marker-12", difficulty: "green", x: 407.5, y: 455.5 },
-  { id: "marker-13", difficulty: "blue", x: 215.5, y: 407.5 },
-  { id: "marker-14", difficulty: "blue", x: 311.5, y: 311.5 },
-  { id: "marker-15", difficulty: "blue", x: 311.5, y: 215.5 },
-  { id: "marker-16", difficulty: "blue", x: 311.5, y: 71.5 }
+  { id: "marker-01", difficulty: "purple", strategy: "rush", x: 311.5, y: 1415.5 },
+  { id: "marker-02", difficulty: "purple", strategy: "fortress", x: 455.5, y: 1319.5 },
+  { id: "marker-03", difficulty: "yellow", strategy: "counter", x: 215.5, y: 1271.5 },
+  { id: "marker-04", difficulty: "yellow", strategy: "rush", x: 167.5, y: 1175.5 },
+  { id: "marker-05", difficulty: "yellow", strategy: "fortress", x: 311.5, y: 1127.5 },
+  { id: "marker-06", difficulty: "red", strategy: "counter", x: 455.5, y: 1031.5 },
+  { id: "marker-07", difficulty: "red", strategy: "rush", x: 359.5, y: 983.5 },
+  { id: "marker-08", difficulty: "red", strategy: "fortress", x: 263.5, y: 887.5 },
+  { id: "marker-09", difficulty: "green", strategy: "counter", x: 167.5, y: 791.5 },
+  { id: "marker-10", difficulty: "green", strategy: "rush", x: 359.5, y: 695.5 },
+  { id: "marker-11", difficulty: "green", strategy: "fortress", x: 455.5, y: 551.5 },
+  { id: "marker-12", difficulty: "green", strategy: "counter", x: 407.5, y: 455.5 },
+  { id: "marker-13", difficulty: "blue", strategy: "rush", x: 215.5, y: 407.5 },
+  { id: "marker-14", difficulty: "blue", strategy: "fortress", x: 311.5, y: 311.5 },
+  { id: "marker-15", difficulty: "blue", strategy: "counter", x: 311.5, y: 215.5 },
+  { id: "marker-16", difficulty: "blue", strategy: "boss", x: 311.5, y: 71.5 }
 ];
 const ART_PACK_OPTIONS = [
   { id: "classic", name: "Classic", unlocked: true, preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
@@ -417,7 +417,10 @@ const AI_DIFFICULTY_SETTINGS = {
     attackerPatterns: [["tank"], ["wisp", "tank"], ["brute", "tank"]],
     fallbackOrder: ["tank", "wisp", "brute", "runner", "imp"],
     randomTowerNoise: 0.9,
-    considerTowerUpgrades: false
+    considerTowerUpgrades: false,
+    adaptation: 0.1,
+    burstPressure: 0.35,
+    defaultStrategy: "rush"
   },
   yellow: {
     label: "Yellow",
@@ -433,7 +436,10 @@ const AI_DIFFICULTY_SETTINGS = {
     attackerPatterns: [["runner", "runner", "imp", "runner", "imp"], ["imp", "runner", "brute", "wisp", "runner"], ["brute", "wisp", "tank", "imp"]],
     fallbackOrder: ["runner", "imp", "brute", "wisp", "tank"],
     randomTowerNoise: 0.22,
-    considerTowerUpgrades: true
+    considerTowerUpgrades: true,
+    adaptation: 0.45,
+    burstPressure: 0.65,
+    defaultStrategy: "counter"
   },
   red: {
     label: "Red",
@@ -449,7 +455,10 @@ const AI_DIFFICULTY_SETTINGS = {
     attackerPatterns: [["runner", "imp", "runner", "imp", "runner"], ["imp", "imp", "runner", "brute", "imp"], ["brute", "imp", "wisp", "runner"]],
     fallbackOrder: ["imp", "runner", "brute", "wisp", "tank"],
     randomTowerNoise: 0.12,
-    considerTowerUpgrades: true
+    considerTowerUpgrades: true,
+    adaptation: 0.75,
+    burstPressure: 0.95,
+    defaultStrategy: "rush"
   },
   green: {
     label: "Green",
@@ -465,7 +474,10 @@ const AI_DIFFICULTY_SETTINGS = {
     attackerPatterns: [["runner", "imp", "runner", "imp", "runner", "imp"], ["imp", "runner", "brute", "imp", "runner"], ["brute", "wisp", "imp", "runner"]],
     fallbackOrder: ["runner", "imp", "brute", "wisp", "tank"],
     randomTowerNoise: 0.06,
-    considerTowerUpgrades: true
+    considerTowerUpgrades: true,
+    adaptation: 1.05,
+    burstPressure: 1.2,
+    defaultStrategy: "counter"
   },
   blue: {
     label: "Blue",
@@ -481,9 +493,80 @@ const AI_DIFFICULTY_SETTINGS = {
     attackerPatterns: [["runner", "imp", "runner", "imp", "runner", "imp", "runner"], ["imp", "runner", "imp", "brute", "runner", "imp"], ["brute", "wisp", "imp", "runner", "tank"]],
     fallbackOrder: ["runner", "imp", "brute", "wisp", "tank"],
     randomTowerNoise: 0.02,
-    considerTowerUpgrades: true
+    considerTowerUpgrades: true,
+    adaptation: 1.35,
+    burstPressure: 1.55,
+    defaultStrategy: "counter"
   }
 };
+const AI_STRATEGY_SETTINGS = {
+  rush: {
+    label: "Rush",
+    reserveScale: 0.72,
+    defenseBudgetScale: 0.75,
+    attackBudgetScale: 1.35,
+    fallbackBias: { runner: 1.35, imp: 1.28, wisp: 1.08, brute: 0.92, tank: 0.72 },
+    towerBias: { violet: 0.55, yellow: 0.2, red: 0.05, green: 0.35, blue: 0.05 },
+    upgradeBias: 0.2,
+    counterScale: 0.8,
+    burstInterval: 3,
+    forceAttackWhenBehind: 1.35
+  },
+  fortress: {
+    label: "Fortress",
+    reserveScale: 1.1,
+    defenseBudgetScale: 1.45,
+    attackBudgetScale: 0.85,
+    fallbackBias: { runner: 0.82, imp: 0.9, brute: 1.12, wisp: 1.02, tank: 1.28 },
+    towerBias: { violet: -0.1, yellow: 0.45, red: 0.25, green: 0.45, blue: 0.65 },
+    upgradeBias: 0.85,
+    counterScale: 1,
+    burstInterval: 4,
+    forceAttackWhenBehind: 1.05
+  },
+  counter: {
+    label: "Counter",
+    reserveScale: 0.9,
+    defenseBudgetScale: 1.05,
+    attackBudgetScale: 1.12,
+    fallbackBias: { runner: 1.05, imp: 1.08, brute: 1, wisp: 1.05, tank: 1 },
+    towerBias: { violet: 0.15, yellow: 0.35, red: 0.25, green: 0.25, blue: 0.35 },
+    upgradeBias: 0.6,
+    counterScale: 1.45,
+    burstInterval: 3,
+    forceAttackWhenBehind: 1.2
+  },
+  boss: {
+    label: "Boss",
+    reserveScale: 0.55,
+    defenseBudgetScale: 1.25,
+    attackBudgetScale: 1.65,
+    fallbackBias: { runner: 1.25, imp: 1.25, brute: 1.08, wisp: 1.12, tank: 1.08 },
+    towerBias: { violet: 0.45, yellow: 0.85, red: 0.35, green: 0.75, blue: 0.9 },
+    upgradeBias: 1,
+    counterScale: 1.7,
+    burstInterval: 2,
+    forceAttackWhenBehind: 1.55
+  }
+};
+const AI_GAUNTLET_STAGE_SETTINGS = [
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 4, towers: 2 }, { round: 7, towers: 3 }], towerBias: { violet: 0.8, yellow: 0.2 }, attackerBias: { runner: 0.35, imp: 0.25 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 3, towers: 2 }, { round: 6, towers: 3 }], towerBias: { yellow: 0.6, violet: 0.25 }, attackerBias: { brute: 0.35, imp: 0.25 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 3, towers: 2 }, { round: 5, towers: 3 }, { round: 8, towers: 4 }], towerBias: { red: 0.55, violet: 0.25 }, attackerBias: { runner: 0.45, wisp: 0.25 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 3, towers: 2 }, { round: 5, towers: 3 }, { round: 8, towers: 4 }], towerBias: { yellow: 0.55, blue: 0.2 }, attackerBias: { imp: 0.45, runner: 0.3 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 3, towers: 2 }, { round: 5, towers: 3 }, { round: 7, towers: 4 }], towerBias: { green: 0.55, red: 0.25 }, attackerBias: { brute: 0.45, wisp: 0.25 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 3, towers: 2 }, { round: 5, towers: 3 }, { round: 7, towers: 4 }], towerBias: { red: 0.6, yellow: 0.25 }, attackerBias: { runner: 0.4, imp: 0.35 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 2, towers: 2 }, { round: 4, towers: 3 }, { round: 6, towers: 4 }], towerBias: { violet: 0.55, yellow: 0.45, red: 0.2 }, attackerBias: { runner: 0.65, imp: 0.45 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 2, towers: 2 }, { round: 4, towers: 3 }, { round: 6, towers: 4 }], towerBias: { green: 0.65, blue: 0.4, yellow: 0.25 }, attackerBias: { brute: 0.55, wisp: 0.35, imp: 0.2 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 2, towers: 2 }, { round: 4, towers: 3 }, { round: 6, towers: 4 }, { round: 9, towers: 5 }], towerBias: { yellow: 0.65, blue: 0.55, red: 0.25 }, attackerBias: { wisp: 0.55, runner: 0.4, imp: 0.25 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 2, towers: 2 }, { round: 4, towers: 3 }, { round: 6, towers: 4 }, { round: 9, towers: 5 }], towerBias: { violet: 0.55, red: 0.45, yellow: 0.35 }, attackerBias: { runner: 0.7, imp: 0.5 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 2, towers: 2 }, { round: 4, towers: 3 }, { round: 6, towers: 4 }, { round: 8, towers: 5 }], towerBias: { blue: 0.75, green: 0.45, yellow: 0.35 }, attackerBias: { brute: 0.55, tank: 0.35, wisp: 0.3 } },
+  { towerPlan: [{ round: 1, towers: 1 }, { round: 2, towers: 2 }, { round: 4, towers: 3 }, { round: 6, towers: 4 }, { round: 8, towers: 5 }], towerBias: { yellow: 0.65, blue: 0.5, green: 0.35 }, attackerBias: { wisp: 0.55, imp: 0.45, runner: 0.35 } },
+  { towerPlan: [{ round: 1, towers: 2 }, { round: 3, towers: 3 }, { round: 5, towers: 4 }, { round: 7, towers: 5 }], towerBias: { violet: 0.65, yellow: 0.55, blue: 0.35 }, attackerBias: { runner: 0.75, imp: 0.6, wisp: 0.25 } },
+  { towerPlan: [{ round: 1, towers: 2 }, { round: 3, towers: 3 }, { round: 5, towers: 4 }, { round: 7, towers: 5 }], towerBias: { green: 0.75, blue: 0.65, red: 0.35 }, attackerBias: { brute: 0.65, wisp: 0.45, tank: 0.35 } },
+  { towerPlan: [{ round: 1, towers: 2 }, { round: 3, towers: 3 }, { round: 5, towers: 4 }, { round: 7, towers: 5 }], towerBias: { yellow: 0.75, blue: 0.65, red: 0.4 }, attackerBias: { wisp: 0.65, runner: 0.55, imp: 0.45 } },
+  { towerPlan: [{ round: 1, towers: 2 }, { round: 2, towers: 3 }, { round: 4, towers: 4 }, { round: 6, towers: 5 }], towerBias: { blue: 0.8, yellow: 0.65, green: 0.55, red: 0.35 }, attackerBias: { runner: 0.65, imp: 0.6, wisp: 0.5, brute: 0.45 } }
+];
 let gameOptions = { ...DEFAULT_OPTIONS };
 let activeArtPackId = DEFAULT_OPTIONS.artPack;
 let activeArtPack = ART_PACKS[activeArtPackId] || ART_PACKS[DEFAULT_OPTIONS.artPack];
@@ -656,7 +739,8 @@ const state = {
     ai: 0
   },
   gauntletRun: null,
-  aiDifficultyOverride: ""
+  aiDifficultyOverride: "",
+  aiStrategyOverride: ""
 };
 
 let gauntletProgress = {
@@ -1137,6 +1221,7 @@ function saveMatchStateNow() {
     roundManaBonusPending: state.roundManaBonusPending,
     gauntletRun: state.gauntletRun,
     aiDifficultyOverride: state.aiDifficultyOverride,
+    aiStrategyOverride: state.aiStrategyOverride,
     hasActiveMatch: state.hasActiveMatch
   };
 
@@ -1216,6 +1301,7 @@ function restoreSavedMatchState() {
       ? { stageIndex: clamp(Math.floor(state.gauntletRun.stageIndex), 0, GAUNTLET_STAGES.length - 1) }
       : null;
     state.aiDifficultyOverride = AI_DIFFICULTY_SETTINGS[state.aiDifficultyOverride] ? state.aiDifficultyOverride : "";
+    state.aiStrategyOverride = AI_STRATEGY_SETTINGS[state.aiStrategyOverride] ? state.aiStrategyOverride : "";
     refreshAllUI();
     return true;
   } catch {
@@ -1530,6 +1616,20 @@ function applyArtPack(artPackId, rerender = false) {
 function getAIDifficultySettings() {
   const difficultyId = state.aiDifficultyOverride || gameOptions.difficulty;
   return AI_DIFFICULTY_SETTINGS[difficultyId] || AI_DIFFICULTY_SETTINGS[DEFAULT_OPTIONS.difficulty];
+}
+
+function getAIStrategySettings() {
+  const difficulty = getAIDifficultySettings();
+  const strategyId = state.aiStrategyOverride || difficulty.defaultStrategy || "counter";
+  return AI_STRATEGY_SETTINGS[strategyId] || AI_STRATEGY_SETTINGS.counter;
+}
+
+function getAIGauntletStageSettings() {
+  if (!state.gauntletRun) {
+    return null;
+  }
+  const stageIndex = clamp(Math.floor(state.gauntletRun.stageIndex), 0, GAUNTLET_STAGES.length - 1);
+  return AI_GAUNTLET_STAGE_SETTINGS[stageIndex] || null;
 }
 
 function getAIManaBonusPerRound() {
@@ -2027,6 +2127,7 @@ function resetMatch() {
   state.roundManaBonusPending.player = 0;
   state.roundManaBonusPending.ai = 0;
   state._aiFanSeeds = [];
+  state.aiStrategyOverride = "";
 
   previousTime = performance.now();
   updateStatus("Round 1 coming up.");
@@ -2041,6 +2142,7 @@ function startNewMatch(options = {}) {
     ? { stageIndex: clamp(Math.floor(Number(options.stageIndex) || 0), 0, GAUNTLET_STAGES.length - 1) }
     : null;
   state.aiDifficultyOverride = options.difficulty || "";
+  state.aiStrategyOverride = options.strategy || "";
   state.paused = false;
   setScreen("game");
   lockLandscapeOrientation();
@@ -2054,7 +2156,8 @@ function startGauntletChallenge() {
   startNewMatch({
     gauntlet: true,
     stageIndex,
-    difficulty: stage.difficulty
+    difficulty: stage.difficulty,
+    strategy: stage.strategy
   });
   updateStatus(`Gauntlet battle ${stageIndex + 1}.`);
 }
@@ -2665,6 +2768,7 @@ function launchWave() {
     window.Lobby.submitPrepPhaseData();
     return;
   }
+  finalizeAIMovesBeforeBattle();
   _doLaunchWave();
 }
 
@@ -2855,6 +2959,7 @@ function finishMatch() {
   }
   state.gauntletRun = null;
   state.aiDifficultyOverride = "";
+  state.aiStrategyOverride = "";
   clearSavedMatchState();
   updateStatus(`${state.winnerText} Review the battle report or start a new match.`);
   if (shouldReturnToGauntlet) {
@@ -2955,8 +3060,134 @@ function totalDefenseScore(towers) {
   return towers.reduce((sum, tower) => sum + towerPowerScore(tower), 0);
 }
 
-function pickBestAITowerPlacement(mana, defenseBudget, playerDefenseScore, waveNumber) {
+function countPlacedTowers(towers) {
+  return towers.reduce((count, tower) => count + (tower ? 1 : 0), 0);
+}
+
+function getTowerTargetFromPlan(plan, waveNumber) {
+  let target = 0;
+  for (const step of plan) {
+    if (waveNumber >= step.round) {
+      target = step.towers;
+    }
+  }
+  return target;
+}
+
+function getAIMinTowerTarget(waveNumber) {
+  const stageSettings = getAIGauntletStageSettings();
+  if (stageSettings?.towerPlan) {
+    return getTowerTargetFromPlan(stageSettings.towerPlan, waveNumber);
+  }
+
+  const difficulty = state.aiDifficultyOverride || gameOptions.difficulty;
+  const defaultPlans = {
+    purple: [{ round: 1, towers: 1 }, { round: 5, towers: 2 }, { round: 8, towers: 3 }],
+    yellow: [{ round: 1, towers: 1 }, { round: 3, towers: 2 }, { round: 6, towers: 3 }],
+    red: [{ round: 1, towers: 1 }, { round: 3, towers: 2 }, { round: 5, towers: 3 }, { round: 8, towers: 4 }],
+    green: [{ round: 1, towers: 1 }, { round: 3, towers: 2 }, { round: 5, towers: 3 }, { round: 7, towers: 4 }],
+    blue: [{ round: 1, towers: 1 }, { round: 2, towers: 2 }, { round: 4, towers: 3 }, { round: 6, towers: 4 }]
+  };
+  return getTowerTargetFromPlan(defaultPlans[difficulty] || defaultPlans.yellow, waveNumber);
+}
+
+function countIds(ids) {
+  return ids.reduce((counts, id) => {
+    counts[id] = (counts[id] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function analyzePlayerPlan(playerDefenseScore) {
+  const towerCounts = countIds(state.playerTowers.filter(Boolean).map((tower) => tower.id));
+  const queuedCounts = countIds(state.playerQueue);
+  const towerTotal = state.playerTowers.filter(Boolean).length;
+  const queueTotal = state.playerQueue.length;
+  const emptySlots = Math.max(0, state.playerTowers.length - towerTotal);
+  const antiFast = (towerCounts.violet || 0) * 0.8 + (towerCounts.yellow || 0) * 1.3 + (towerCounts.blue || 0) * 0.55;
+  const antiSwarm = (towerCounts.red || 0) * 1.15 + (towerCounts.yellow || 0) * 0.8 + (towerCounts.blue || 0) * 1.45;
+  const antiTank = (towerCounts.red || 0) * 1.15 + (towerCounts.green || 0) * 1.45 + (towerCounts.blue || 0) * 0.8;
+  const pressureDefense = Math.max(0, playerDefenseScore - 8) * 0.08;
+  const fastGap = clamp(2.35 - antiFast + emptySlots * 0.35, 0, 3.2);
+  const swarmGap = clamp(2.2 - antiSwarm + emptySlots * 0.3, 0, 3.2);
+  const tankGap = clamp(2.35 - antiTank + pressureDefense, 0, 3.2);
+  const queuedFast = (queuedCounts.runner || 0) + (queuedCounts.wisp || 0);
+  const queuedSwarm = queuedCounts.imp || 0;
+  const queuedHeavy = (queuedCounts.brute || 0) + (queuedCounts.tank || 0);
+  const scoreDeficit = Math.max(0, state.playerScore - state.aiScore);
+  const scoreLead = Math.max(0, state.aiScore - state.playerScore);
+
+  return {
+    playerDefenseScore,
+    towerCounts,
+    queuedCounts,
+    towerTotal,
+    queueTotal,
+    emptySlots,
+    fastGap,
+    swarmGap,
+    tankGap,
+    weakDefense: playerDefenseScore < 6 || towerTotal <= 1,
+    overbuiltDefense: playerDefenseScore > 10.5 && queueTotal <= 1,
+    playerRush: queueTotal >= 4 || queuedFast + queuedSwarm >= 3,
+    queuedFast,
+    queuedSwarm,
+    queuedHeavy,
+    scoreDeficit,
+    scoreLead
+  };
+}
+
+function getAIAttackerCounterScore(attackerId, playerPlan) {
+  const pressureBonus = playerPlan.weakDefense ? 0.75 : 0;
+  const overbuildBonus = playerPlan.overbuiltDefense ? 0.45 : 0;
+  const behindBonus = playerPlan.scoreDeficit * 0.16;
+  const scoreById = {
+    imp: playerPlan.swarmGap * 1.2 + pressureBonus + overbuildBonus + behindBonus,
+    runner: playerPlan.fastGap * 1.25 + pressureBonus + behindBonus,
+    brute: playerPlan.tankGap * 0.9 + overbuildBonus + playerPlan.playerDefenseScore * 0.035,
+    wisp: playerPlan.fastGap * 0.65 + playerPlan.tankGap * 0.55 + behindBonus * 0.7,
+    tank: playerPlan.tankGap * 1.3 + overbuildBonus + playerPlan.playerDefenseScore * 0.045
+  };
+  return scoreById[attackerId] || 0;
+}
+
+function getAITowerCounterScore(towerId, playerPlan) {
+  const scoreById = {
+    violet: playerPlan.queuedFast * 0.45 + playerPlan.queuedSwarm * 0.25 + playerPlan.playerRush * 0.35,
+    yellow: playerPlan.queuedFast * 0.85 + playerPlan.queuedSwarm * 0.45 + playerPlan.playerRush * 0.55,
+    red: playerPlan.queuedSwarm * 0.9 + playerPlan.queuedHeavy * 0.5,
+    green: playerPlan.queuedHeavy * 0.9 + playerPlan.queueTotal * 0.18,
+    blue: playerPlan.queuedSwarm * 0.75 + playerPlan.queuedFast * 0.45 + playerPlan.queueTotal * 0.22
+  };
+  return scoreById[towerId] || 0;
+}
+
+function rankAIAttackers(playerPlan, mana, waveNumber) {
   const difficulty = getAIDifficultySettings();
+  const strategy = getAIStrategySettings();
+  const stageSettings = getAIGauntletStageSettings();
+  return attackerDefs
+    .filter((attacker) => attacker.cost <= mana)
+    .map((attacker) => {
+      const hpValue = attacker.hp / attacker.cost;
+      const speedValue = attacker.speed * 6;
+      const strategyBias = strategy.fallbackBias?.[attacker.id] || 1;
+      const stageBias = 1 + (stageSettings?.attackerBias?.[attacker.id] || 0);
+      const counterValue = getAIAttackerCounterScore(attacker.id, playerPlan) * (difficulty.adaptation || 0) * strategy.counterScale;
+      const earlyTankPenalty = attacker.id === "tank" && waveNumber < 7 && !(stageSettings?.attackerBias?.tank > 0.3) ? 1.4 : 0;
+      return {
+        attacker,
+        score: (hpValue + speedValue) * strategyBias * stageBias + counterValue - attacker.cost * 0.05 - earlyTankPenalty
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+function pickBestAITowerPlacement(mana, defenseBudget, playerPlan, waveNumber) {
+  const difficulty = getAIDifficultySettings();
+  const strategy = getAIStrategySettings();
+  const stageSettings = getAIGauntletStageSettings();
   const usedTowerTypes = new Set();
   const towerCounts = {};
   for (const tower of state.aiTowers) {
@@ -2968,7 +3199,9 @@ function pickBestAITowerPlacement(mana, defenseBudget, playerDefenseScore, waveN
   const missingTowerTypes = towerDefs
     .map((tower) => tower.id)
     .filter((towerId) => !usedTowerTypes.has(towerId));
-  const forceTowerDiversity = missingTowerTypes.length > 0;
+  const maxAffordableCost = Math.min(mana, defenseBudget);
+  const hasAffordableMissingTower = towerDefs.some((tower) => missingTowerTypes.includes(tower.id) && tower.cost <= maxAffordableCost);
+  const forceTowerDiversity = missingTowerTypes.length > 0 && hasAffordableMissingTower;
 
   let best = null;
   for (let slotIndex = 0; slotIndex < state.aiTowers.length; slotIndex += 1) {
@@ -2999,12 +3232,15 @@ function pickBestAITowerPlacement(mana, defenseBudget, playerDefenseScore, waveN
 
       const diversityPenalty = (towerCounts[candidate.id] || 0) * 0.85;
       const expensiveEarlyPenalty = waveNumber <= 2 && candidate.cost >= 9 ? 1.3 : 0;
-      const counterBoost = playerDefenseScore > 9 ? candidate.range * 2.1 : candidate.damage * 0.2;
+      const counterBoost = playerPlan.playerDefenseScore > 9 ? candidate.range * 2.1 : candidate.damage * 0.2;
+      const playerQueueCounter = getAITowerCounterScore(candidate.id, playerPlan) * (difficulty.adaptation || 0) * strategy.counterScale;
       const emptyBonus = existing ? 0 : 0.8;
       const diversityPriority = forceTowerDiversity ? 1.35 : 0;
-      const upgradeBias = canUpgrade ? 0.65 : 0;
+      const upgradeBias = canUpgrade ? 0.65 + strategy.upgradeBias : 0;
       const difficultyBias = difficulty.towerWeights[candidate.id] || 0;
-      const value = improvement + counterBoost + emptyBonus + diversityPriority + upgradeBias + difficultyBias - diversityPenalty - candidate.cost * 0.09 - expensiveEarlyPenalty + Math.random() * difficulty.randomTowerNoise;
+      const strategyBias = strategy.towerBias?.[candidate.id] || 0;
+      const stageBias = stageSettings?.towerBias?.[candidate.id] || 0;
+      const value = improvement + counterBoost + playerQueueCounter + emptyBonus + diversityPriority + upgradeBias + difficultyBias + strategyBias + stageBias - diversityPenalty - candidate.cost * 0.09 - expensiveEarlyPenalty + Math.random() * difficulty.randomTowerNoise;
 
       if (!best || value > best.value) {
         best = { slotIndex, tower: candidate, value, nextLevel };
@@ -3015,22 +3251,38 @@ function pickBestAITowerPlacement(mana, defenseBudget, playerDefenseScore, waveN
   return best;
 }
 
-function chooseAIBatchPattern(playerDefenseScore, waveNumber) {
+function chooseAIBatchPattern(playerPlan, waveNumber, mana) {
   const difficulty = getAIDifficultySettings();
+  const strategy = getAIStrategySettings();
+  const adaptation = difficulty.adaptation || 0;
+
+  if (adaptation >= 0.45) {
+    const ranked = rankAIAttackers(playerPlan, mana, waveNumber).map((entry) => entry.attacker.id);
+    if (ranked.length > 0) {
+      const preferred = ranked[0];
+      const secondary = ranked[1] || preferred;
+      const tertiary = ranked[2] || secondary;
+      const burst = waveNumber % strategy.burstInterval === 0 || playerPlan.scoreDeficit > 0;
+      return burst
+        ? [preferred, secondary, preferred, tertiary, preferred, secondary, preferred]
+        : [preferred, secondary, preferred, tertiary, secondary];
+    }
+  }
+
   if (difficulty.attackerPatterns?.length) {
-    if (playerDefenseScore < 6 || waveNumber <= 2) {
+    if (playerPlan.playerDefenseScore < 6 || waveNumber <= 2) {
       return difficulty.attackerPatterns[0];
     }
-    if (playerDefenseScore > 10 && difficulty.attackerPatterns[2]) {
+    if (playerPlan.playerDefenseScore > 10 && difficulty.attackerPatterns[2]) {
       return difficulty.attackerPatterns[2];
     }
     return difficulty.attackerPatterns[1] || difficulty.attackerPatterns[0];
   }
 
-  if (playerDefenseScore < 6 || waveNumber <= 2) {
+  if (playerPlan.playerDefenseScore < 6 || waveNumber <= 2) {
     return ["runner", "runner", "imp", "runner", "imp"];
   }
-  if (playerDefenseScore > 10) {
+  if (playerPlan.playerDefenseScore > 10) {
     return ["tank", "brute", "wisp", "imp"];
   }
   return ["imp", "runner", "brute", "wisp", "runner"];
@@ -3048,7 +3300,8 @@ function queueAIBatch(pattern, attackBudget) {
       continue;
     }
     if (spent + attacker.cost > attackBudget || state.aiMana < attacker.cost) {
-      break;
+      cursor += 1;
+      continue;
     }
     state.aiMana -= attacker.cost;
     spent += attacker.cost;
@@ -3061,11 +3314,16 @@ function queueAIBatch(pattern, attackBudget) {
   return sent;
 }
 
-function chooseAIAttackerByDefense(playerDefenseScore, mana, waveNumber) {
+function chooseAIAttackerByDefense(playerPlan, mana, waveNumber) {
   const difficulty = getAIDifficultySettings();
+  const strategy = getAIStrategySettings();
   const options = attackerDefs.filter((attacker) => attacker.cost <= mana);
   if (options.length === 0) {
     return null;
+  }
+
+  if ((difficulty.adaptation || 0) >= 0.45) {
+    return rankAIAttackers(playerPlan, mana, waveNumber)[0]?.attacker || options[0];
   }
 
   for (const attackerId of difficulty.fallbackOrder || []) {
@@ -3075,7 +3333,7 @@ function chooseAIAttackerByDefense(playerDefenseScore, mana, waveNumber) {
     }
   }
 
-  const pressure = playerDefenseScore / Math.max(1, waveNumber);
+  const pressure = playerPlan.playerDefenseScore / Math.max(1, waveNumber);
   const weightById = {
     imp: pressure < 1.8 ? 1.25 : 0.75,
     runner: pressure < 1.8 ? 1.35 : 0.8,
@@ -3089,7 +3347,7 @@ function chooseAIAttackerByDefense(playerDefenseScore, mana, waveNumber) {
   for (const attacker of options) {
     const hpValue = attacker.hp / attacker.cost;
     const speedValue = attacker.speed * 6;
-    const score = (hpValue + speedValue) * (weightById[attacker.id] || 1);
+    const score = (hpValue + speedValue) * (weightById[attacker.id] || 1) * (strategy.fallbackBias?.[attacker.id] || 1);
     if (score > bestScore) {
       bestScore = score;
       best = attacker;
@@ -3105,20 +3363,43 @@ function prepareAIMoves() {
 
   const difficulty = getAIDifficultySettings();
   const playerDefenseScore = totalDefenseScore(state.playerTowers);
+  const playerPlan = analyzePlayerPlan(playerDefenseScore);
+  const strategy = getAIStrategySettings();
   const minAttackerCost = Math.min(...attackerDefs.map((item) => item.cost));
-  const isSpikeSaveRound = state.waveNumber % 3 === 0 || (state.waveNumber >= 6 && playerDefenseScore > 9);
+  const burstInterval = Math.max(2, strategy.burstInterval || 3);
+  const isSpikeSaveRound = state.waveNumber % burstInterval === 0 || (state.waveNumber >= 6 && playerDefenseScore > 9);
+  const pressureStateScale = 1 + playerPlan.scoreDeficit * 0.08 * strategy.forceAttackWhenBehind - playerPlan.scoreLead * 0.025;
   const baseReserveTarget = isSpikeSaveRound
-    ? clamp(14 + state.waveNumber * 2.8, 18, 54)
+    ? clamp(10 + state.waveNumber * 1.9, 12, 36)
     : clamp(7 + state.waveNumber * 1.5, 9, 30);
-  const reserveTarget = clamp(baseReserveTarget * difficulty.reserveScale, 5, 70);
-  const defenseRatio = (isSpikeSaveRound ? 0.14 : 0.22) * difficulty.defenseRatioScale;
+  const reserveTarget = clamp(baseReserveTarget * difficulty.reserveScale * strategy.reserveScale, 3, 54);
+  const playerRushDefenseScale = playerPlan.playerRush ? 1.25 : 1;
+  const defenseRatio = (isSpikeSaveRound ? 0.12 : 0.22) * difficulty.defenseRatioScale * strategy.defenseBudgetScale * playerRushDefenseScale;
   const attackBiasFloor = Math.max(0, state.aiMana - reserveTarget);
   let defenseBudget = Math.min(Math.max(0, state.aiMana * defenseRatio), attackBiasFloor);
   let placementCount = 0;
-  const maxPlacements = isSpikeSaveRound ? 1 : difficulty.maxPlacements;
+  const maxPlacements = isSpikeSaveRound && strategy.label !== "Fortress" ? 1 : difficulty.maxPlacements;
+  const minTowerTarget = getAIMinTowerTarget(state.waveNumber);
+  const mandatoryReserve = strategy.label === "Fortress" ? 3 : 1;
+
+  while (countPlacedTowers(state.aiTowers) < minTowerTarget && placementCount < Math.max(1, difficulty.maxPlacements)) {
+    const mandatoryDefenseBudget = Math.max(defenseBudget, state.aiMana - mandatoryReserve);
+    const bestPlacement = pickBestAITowerPlacement(state.aiMana, mandatoryDefenseBudget, playerPlan, state.waveNumber);
+    if (!bestPlacement) {
+      break;
+    }
+    if (bestPlacement.tower.cost > state.aiMana || bestPlacement.tower.cost > mandatoryDefenseBudget) {
+      break;
+    }
+    state.aiMana -= bestPlacement.tower.cost;
+    defenseBudget = Math.max(0, defenseBudget - bestPlacement.tower.cost);
+    state.aiTowers[bestPlacement.slotIndex] = createTowerInstance(bestPlacement.tower, "ai", bestPlacement.nextLevel || 1);
+    markMatchUsage("towers", bestPlacement.tower.id, "ai");
+    placementCount += 1;
+  }
 
   while (placementCount < maxPlacements) {
-    const bestPlacement = pickBestAITowerPlacement(state.aiMana, defenseBudget, playerDefenseScore, state.waveNumber);
+    const bestPlacement = pickBestAITowerPlacement(state.aiMana, defenseBudget, playerPlan, state.waveNumber);
     if (!bestPlacement) {
       break;
     }
@@ -3133,11 +3414,12 @@ function prepareAIMoves() {
   }
 
   const postDefenseReserve = isSpikeSaveRound
-    ? reserveTarget
+    ? clamp(reserveTarget * 0.28, 2, 12)
     : clamp(reserveTarget * 0.55 * difficulty.postReserveScale, 2, 24);
   let sentCount = 0;
-  let attackBudget = Math.max(0, (state.aiMana - postDefenseReserve) * difficulty.minAttackBudgetScale);
-  const pattern = chooseAIBatchPattern(playerDefenseScore, state.waveNumber);
+  const attackScale = difficulty.minAttackBudgetScale * strategy.attackBudgetScale * clamp(pressureStateScale, 0.7, 1.65) * (isSpikeSaveRound ? 1 + difficulty.burstPressure * 0.22 : 1);
+  let attackBudget = Math.max(0, (state.aiMana - postDefenseReserve) * attackScale);
+  const pattern = chooseAIBatchPattern(playerPlan, state.waveNumber, state.aiMana);
 
   while (attackBudget >= minAttackerCost) {
     const sentInBatch = queueAIBatch(pattern, attackBudget);
@@ -3145,17 +3427,52 @@ function prepareAIMoves() {
       break;
     }
     sentCount += sentInBatch;
-    attackBudget = Math.max(0, (state.aiMana - postDefenseReserve) * difficulty.minAttackBudgetScale);
+    attackBudget = Math.max(0, (state.aiMana - postDefenseReserve) * attackScale);
   }
 
   if (sentCount === 0 && state.aiMana >= minAttackerCost) {
-    const fallback = chooseAIAttackerByDefense(playerDefenseScore, state.aiMana, state.waveNumber) || attackerDefs[0];
+    const fallback = chooseAIAttackerByDefense(playerPlan, state.aiMana, state.waveNumber) || attackerDefs[0];
     state.aiMana -= fallback.cost;
     state.aiQueue.push(fallback.id);
     markMatchUsage("attackers", fallback.id, "ai");
   }
 
   state.aiDraftDone = true;
+}
+
+function finalizeAIMovesBeforeBattle() {
+  if (state.gameOver || multiplayerRole !== null) {
+    return;
+  }
+  if (!state.aiDraftDone) {
+    prepareAIMoves();
+  }
+
+  const difficulty = getAIDifficultySettings();
+  if ((difficulty.adaptation || 0) < 0.45) {
+    return;
+  }
+
+  const strategy = getAIStrategySettings();
+  const playerPlan = analyzePlayerPlan(totalDefenseScore(state.playerTowers));
+  const minAttackerCost = Math.min(...attackerDefs.map((item) => item.cost));
+
+  if ((playerPlan.queueTotal >= 2 || playerPlan.playerRush) && state.aiMana >= minAttackerCost + 2) {
+    const defenseBudget = Math.max(0, (state.aiMana - minAttackerCost) * 0.38 * strategy.defenseBudgetScale);
+    const bestPlacement = pickBestAITowerPlacement(state.aiMana, defenseBudget, playerPlan, state.waveNumber);
+    if (bestPlacement && bestPlacement.tower.cost <= state.aiMana && bestPlacement.tower.cost <= defenseBudget) {
+      state.aiMana -= bestPlacement.tower.cost;
+      state.aiTowers[bestPlacement.slotIndex] = createTowerInstance(bestPlacement.tower, "ai", bestPlacement.nextLevel || 1);
+      markMatchUsage("towers", bestPlacement.tower.id, "ai");
+    }
+  }
+
+  const reserve = strategy.label === "Fortress" ? 5 : 2;
+  const attackScale = difficulty.minAttackBudgetScale * strategy.attackBudgetScale * (playerPlan.scoreDeficit > 0 ? 0.8 : 0.55);
+  const attackBudget = Math.max(0, (state.aiMana - reserve) * attackScale);
+  if (attackBudget >= minAttackerCost) {
+    queueAIBatch(chooseAIBatchPattern(playerPlan, state.waveNumber, state.aiMana), attackBudget);
+  }
 }
 
 function attackerPosition(unit) {

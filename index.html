@@ -42,6 +42,18 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <section class="loading-animatic" id="loading-animatic" aria-label="Overhill intro">
+    <video
+      class="loading-animatic-video"
+      id="loading-animatic-video"
+      src="assets/intro/overhill-animatic-with-urs-audio.mp4"
+      autoplay
+      playsinline
+      preload="auto"
+    ></video>
+    <button class="loading-animatic-skip" id="loading-animatic-skip-btn" type="button" aria-label="Skip intro">Skip</button>
+  </section>
+
   <main class="app-shell" id="app-shell">
     <section class="orientation-notice hidden" id="orientation-notice" aria-live="polite">
       <div class="orientation-card">
@@ -224,12 +236,8 @@
       </section>
     </section>
 
-    <section class="screen records-screen hidden" id="records-screen" aria-labelledby="records-title">
+    <section class="screen records-screen hidden" id="records-screen" aria-label="Records">
       <div class="section-topline">
-        <div>
-          <p class="eyebrow">Commander Records</p>
-          <h1 id="records-title">Progress Overview</h1>
-        </div>
         <button id="records-back-btn" class="secondary" type="button">Back</button>
       </div>
 
@@ -245,7 +253,6 @@
         <article class="panel milestones-panel">
           <div class="panel-header">
             <h2>Milestones</h2>
-            <p>Short goals that highlight replay value.</p>
           </div>
           <div class="milestone-list" id="records-milestones"></div>
         </article>
@@ -348,12 +355,13 @@
           </section>
           <section class="match-end-overlay hidden" id="match-end-overlay" aria-label="Match result">
             <div class="match-summary-card">
-              <p class="eyebrow">Match Complete</p>
+              <p class="eyebrow" id="match-result-eyebrow">Match Complete</p>
               <h2 id="match-result-title">Victory</h2>
               <p class="match-result-copy" id="match-result-copy">You controlled the lane and closed the match with a late push.</p>
               <div class="match-summary-grid" id="match-summary-grid"></div>
               <p class="match-next-goal" id="match-next-goal">Next goal: win two matches in a row.</p>
               <div class="match-actions">
+                <button id="match-continue-btn" class="hidden" type="button">Continue</button>
                 <button id="match-play-again-btn" type="button">Play Again</button>
                 <button id="match-home-btn" class="secondary" type="button">Return to Menu</button>
               </div>
@@ -413,6 +421,7 @@
         "gauntlet-back-btn": () => window.setScreen?.("menu"),
         "gauntlet-start-btn": () => window.startGauntletChallenge?.(),
         "records-back-btn": () => window.setScreen?.("menu"),
+        "match-continue-btn": () => window.continueFromMatchResults?.(),
         "match-play-again-btn": () => window.startNewMatch?.(),
         "match-home-btn": () => window.setScreen?.("menu")
       };

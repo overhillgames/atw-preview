@@ -12,6 +12,8 @@ const SHOW_RANGE_ARCS = false;
 const STATS_STORAGE_KEY = "bline-tower-wars-match-stats";
 const MATCH_STATE_STORAGE_KEY = "line-tower-wars-active-match";
 const OPTIONS_STORAGE_KEY = "bline-tower-wars-options";
+const INTRO_ANIMATIC_MAX_SECONDS = 12;
+const GAUNTLET_VICTORY_SFX_SRC = "assets/sfx/gauntlet-victory.wav";
 
 // Multiplayer mode — set by lobby.js when a match is found, cleared on exit
 let multiplayerRole          = null;   // null | "host" | "guest"
@@ -341,6 +343,7 @@ const DEFAULT_OPTIONS = {
   sfxVolume: 85
 };
 const GAUNTLET_STORAGE_KEY = "lineTowerWarsGauntlet";
+const GAUNTLET_SEASON_ID = "gauntlet-2026-06-ai-strategy";
 const GAUNTLET_MAP_WIDTH = 630;
 const GAUNTLET_MAP_HEIGHT = 1520;
 const GAUNTLET_STAGES = [
@@ -587,6 +590,9 @@ const artOptionsScreenEl = document.getElementById("art-options-screen");
 const recordsScreenEl = document.getElementById("records-screen");
 const gameScreenEl = document.getElementById("game-screen");
 const appShellEl = document.getElementById("app-shell");
+const loadingAnimaticEl = document.getElementById("loading-animatic");
+const loadingAnimaticVideoEl = document.getElementById("loading-animatic-video");
+const loadingAnimaticSkipBtnEl = document.getElementById("loading-animatic-skip-btn");
 const orientationNoticeEl = document.getElementById("orientation-notice");
 const playMatchBtnEl = document.getElementById("play-match-btn");
 const openGauntletBtnEl = document.getElementById("open-gauntlet-btn");
@@ -636,10 +642,12 @@ const readyBtnEl = document.getElementById("ready-btn");
 const battleSkipBtnEl = document.getElementById("battle-skip-btn");
 const shopOverlayEl = document.getElementById("shop-overlay");
 const matchEndOverlayEl = document.getElementById("match-end-overlay");
+const matchResultEyebrowEl = document.getElementById("match-result-eyebrow");
 const matchResultTitleEl = document.getElementById("match-result-title");
 const matchResultCopyEl = document.getElementById("match-result-copy");
 const matchSummaryGridEl = document.getElementById("match-summary-grid");
 const matchNextGoalEl = document.getElementById("match-next-goal");
+const matchContinueBtnEl = document.getElementById("match-continue-btn");
 const matchPlayAgainBtnEl = document.getElementById("match-play-again-btn");
 const matchRecordsBtnEl = document.getElementById("match-records-btn");
 const matchHomeBtnEl = document.getElementById("match-home-btn");
@@ -744,9 +752,14 @@ const state = {
 };
 
 let gauntletProgress = {
-  unlockedStage: 0
+  seasonId: GAUNTLET_SEASON_ID,
+  unlockedStage: 0,
+  completedWins: 0,
+  currentMatches: 0,
+  currentWins: 0
 };
 let gauntletTravelFromStage = null;
+let pendingGauntletReturn = null;
 let activeDragPayload = "";
 let selectedTowerId = null;
 let touchDragState = null;
@@ -754,12 +767,15 @@ let audioCtx = null;
 let audioUnlocked = false;
 let sfxMasterGain = null;
 let musicAudioEl = null;
+let gauntletVictoryAudioEl = null;
 let activeMusicPackId = DEFAULT_OPTIONS.musicPack;
 let activeMusicTrackIndex = 0;
 let musicFadeTimer = null;
 let lastAppHiddenAt = null;
 let wasPausedBeforeBackground = false;
 let laneBackgroundCanvas = null;
+let loadingAnimaticDismissed = false;
+let loadingAnimaticTimer = null;
 const pixiState = {
   app: null,
   ready: false,
@@ -1680,19 +1696,43 @@ function saveOptions() {
   }
 }
 
+function createDefaultGauntletProgress() {
+  return {
+    seasonId: GAUNTLET_SEASON_ID,
+    unlockedStage: 0,
+    completedWins: 0,
+    currentMatches: 0,
+    currentWins: 0
+  };
+}
+
+function normalizeGauntletProgress(parsed) {
+  if (parsed?.seasonId && parsed.seasonId !== GAUNTLET_SEASON_ID) {
+    return createDefaultGauntletProgress();
+  }
+  const unlockedStage = clamp(Math.floor(Number(parsed?.unlockedStage) || 0), 0, GAUNTLET_STAGES.length - 1);
+  const completedWins = clamp(
+    Math.floor(Number(parsed?.completedWins ?? unlockedStage) || 0),
+    0,
+    GAUNTLET_STAGES.length
+  );
+  const currentMatches = Math.max(0, Math.floor(Number(parsed?.currentMatches) || 0));
+  const currentWins = clamp(Math.floor(Number(parsed?.currentWins) || 0), 0, currentMatches);
+  return {
+    seasonId: GAUNTLET_SEASON_ID,
+    unlockedStage,
+    completedWins,
+    currentMatches,
+    currentWins
+  };
+}
+
 function loadGauntletProgress() {
   try {
     const raw = localStorage.getItem(GAUNTLET_STORAGE_KEY);
-    if (!raw) {
-      gauntletProgress = { unlockedStage: 0 };
-      return;
-    }
-    const parsed = JSON.parse(raw);
-    gauntletProgress = {
-      unlockedStage: clamp(Math.floor(Number(parsed.unlockedStage) || 0), 0, GAUNTLET_STAGES.length - 1)
-    };
+    gauntletProgress = raw ? normalizeGauntletProgress(JSON.parse(raw)) : createDefaultGauntletProgress();
   } catch {
-    gauntletProgress = { unlockedStage: 0 };
+    gauntletProgress = createDefaultGauntletProgress();
   }
 }
 
@@ -1774,14 +1814,39 @@ function advanceGauntletAfterVictory(stageIndex) {
   if (!Number.isFinite(stageIndex)) {
     return false;
   }
+  gauntletProgress.completedWins = clamp(
+    Math.max(Number(gauntletProgress.completedWins) || 0, stageIndex + 1),
+    0,
+    GAUNTLET_STAGES.length
+  );
   const nextStageIndex = clamp(stageIndex + 1, 0, GAUNTLET_STAGES.length - 1);
   if (nextStageIndex <= gauntletProgress.unlockedStage) {
+    saveGauntletProgress();
     return false;
   }
   gauntletTravelFromStage = stageIndex;
   gauntletProgress.unlockedStage = nextStageIndex;
   saveGauntletProgress();
   return true;
+}
+
+function recordCurrentGauntletResult(won) {
+  gauntletProgress.currentMatches = Math.max(0, Math.floor(Number(gauntletProgress.currentMatches) || 0)) + 1;
+  gauntletProgress.currentWins = clamp(
+    Math.floor(Number(gauntletProgress.currentWins) || 0) + (won ? 1 : 0),
+    0,
+    gauntletProgress.currentMatches
+  );
+  saveGauntletProgress();
+}
+
+function getCurrentGauntletWinRate() {
+  const matches = Math.max(0, Math.floor(Number(gauntletProgress.currentMatches) || 0));
+  if (matches <= 0) {
+    return 0;
+  }
+  const wins = clamp(Math.floor(Number(gauntletProgress.currentWins) || 0), 0, matches);
+  return Math.round((wins / matches) * 100);
 }
 
 function setDifficulty(difficulty) {
@@ -1833,6 +1898,9 @@ function setMusicVolume(volume) {
 function setSfxVolume(volume) {
   gameOptions.sfxVolume = clamp(Number(volume), 0, 100);
   updateSfxVolume();
+  if (gauntletVictoryAudioEl) {
+    gauntletVictoryAudioEl.volume = getVolumeScale(gameOptions.sfxVolume);
+  }
   saveOptions();
   refreshMusicOptionsUI();
 }
@@ -1916,6 +1984,64 @@ function setScreen(screen) {
     });
   }
   syncMusicPlaybackForScreen();
+}
+
+function dismissLoadingAnimatic() {
+  if (loadingAnimaticDismissed) {
+    return;
+  }
+  loadingAnimaticDismissed = true;
+  if (loadingAnimaticTimer) {
+    window.clearTimeout(loadingAnimaticTimer);
+    loadingAnimaticTimer = null;
+  }
+  if (loadingAnimaticVideoEl) {
+    loadingAnimaticVideoEl.pause();
+    loadingAnimaticVideoEl.removeAttribute("src");
+    loadingAnimaticVideoEl.load();
+  }
+  loadingAnimaticEl?.classList.add("dismissed");
+  window.setTimeout(() => {
+    loadingAnimaticEl?.classList.add("hidden");
+  }, 260);
+}
+
+function tryPlayLoadingAnimaticWithSound() {
+  if (loadingAnimaticDismissed || !loadingAnimaticVideoEl) {
+    return;
+  }
+  loadingAnimaticVideoEl.muted = false;
+  loadingAnimaticVideoEl.volume = getVolumeScale(gameOptions.sfxVolume);
+  const playPromise = loadingAnimaticVideoEl.play();
+  if (!playPromise || typeof playPromise.catch !== "function") {
+    return;
+  }
+  playPromise.catch(() => {
+    if (loadingAnimaticDismissed || !loadingAnimaticVideoEl) {
+      return;
+    }
+    loadingAnimaticVideoEl.muted = true;
+    loadingAnimaticVideoEl.play().catch(() => {
+      window.setTimeout(dismissLoadingAnimatic, 800);
+    });
+  });
+}
+
+function initLoadingAnimatic() {
+  if (!loadingAnimaticEl || !loadingAnimaticVideoEl) {
+    return;
+  }
+  loadingAnimaticVideoEl.volume = getVolumeScale(gameOptions.sfxVolume);
+  loadingAnimaticVideoEl.addEventListener("ended", dismissLoadingAnimatic, { once: true });
+  loadingAnimaticVideoEl.addEventListener("error", () => {
+    window.setTimeout(dismissLoadingAnimatic, 800);
+  }, { once: true });
+  loadingAnimaticSkipBtnEl?.addEventListener("click", () => {
+    unlockAudioFromGesture();
+    dismissLoadingAnimatic();
+  });
+  loadingAnimaticTimer = window.setTimeout(dismissLoadingAnimatic, INTRO_ANIMATIC_MAX_SECONDS * 1000);
+  window.setTimeout(tryPlayLoadingAnimaticWithSound, 0);
 }
 
 function recordUnitScore(attackerId, owner) {
@@ -2127,6 +2253,7 @@ function resetMatch() {
   state.roundManaBonusPending.player = 0;
   state.roundManaBonusPending.ai = 0;
   state._aiFanSeeds = [];
+  pendingGauntletReturn = null;
   state.aiStrategyOverride = "";
 
   previousTime = performance.now();
@@ -2663,8 +2790,11 @@ function refreshMatchEndOverlay() {
     stats: [],
     nextGoal: getNextGoalText(getProfileStats())
   };
+  const isGauntletResult = Boolean(pendingGauntletReturn);
   matchResultTitleEl.textContent = summary.title;
   matchResultCopyEl.textContent = summary.copy;
+  matchResultEyebrowEl?.classList.toggle("hidden", isGauntletResult);
+  matchResultCopyEl.classList.toggle("hidden", isGauntletResult);
   matchSummaryGridEl.innerHTML = summary.stats.map((item) => `
     <div class="match-stat">
       <strong>${item.value}</strong>
@@ -2672,6 +2802,10 @@ function refreshMatchEndOverlay() {
     </div>
   `).join("");
   matchNextGoalEl.textContent = summary.nextGoal;
+  const awaitingGauntletContinue = isGauntletResult;
+  matchContinueBtnEl?.classList.toggle("hidden", !awaitingGauntletContinue);
+  matchPlayAgainBtnEl?.classList.toggle("hidden", awaitingGauntletContinue);
+  matchHomeBtnEl?.classList.toggle("hidden", awaitingGauntletContinue);
 }
 
 function refreshAllUI() {
@@ -2941,10 +3075,12 @@ function finishMatch() {
   queueStatsSave();
   state.hasActiveMatch = false;
   const gauntletRun = state.gauntletRun;
-  const gauntletAdvanced = state.matchWinner === "player"
-    && gauntletRun
-    && advanceGauntletAfterVictory(gauntletRun.stageIndex);
-  const shouldReturnToGauntlet = gauntletRun && state.matchWinner === "player";
+  const isGauntletMatch = Boolean(gauntletRun);
+  const isGauntletVictory = Boolean(gauntletRun && state.matchWinner === "player");
+  if (isGauntletMatch) {
+    recordCurrentGauntletResult(isGauntletVictory);
+  }
+  const gauntletAdvanced = isGauntletVictory && advanceGauntletAfterVictory(gauntletRun.stageIndex);
   state.matchSummary = buildMatchSummary();
   if (gauntletRun) {
     state.matchSummary.nextGoal = gauntletAdvanced
@@ -2953,20 +3089,41 @@ function finishMatch() {
         ? `Battle ${gauntletRun.stageIndex + 1} is cleared.`
         : `Gauntlet holds at battle ${gauntletRun.stageIndex + 1}.`;
     state.matchSummary.stats = [
-      ...state.matchSummary.stats,
-      { label: "Gauntlet", value: gauntletAdvanced ? "Advanced" : `Battle ${gauntletRun.stageIndex + 1}` }
+      ...state.matchSummary.stats.map((item) => item.label === "Career Matches"
+        ? { label: "Gauntlet Progress", value: `${gauntletProgress.completedWins} of ${GAUNTLET_STAGES.length}` }
+        : item),
+      { label: "Current Gauntlet Win %", value: `${getCurrentGauntletWinRate()}%` }
     ];
+  }
+  pendingGauntletReturn = isGauntletMatch
+    ? {
+        fromStageIndex: gauntletRun.stageIndex,
+        toStageIndex: gauntletProgress.unlockedStage,
+        advanced: gauntletAdvanced
+      }
+    : null;
+  if (isGauntletVictory) {
+    playGauntletVictorySfx();
   }
   state.gauntletRun = null;
   state.aiDifficultyOverride = "";
   state.aiStrategyOverride = "";
   clearSavedMatchState();
-  updateStatus(`${state.winnerText} Review the battle report or start a new match.`);
-  if (shouldReturnToGauntlet) {
-    setScreen("gauntlet");
-  }
+  updateStatus(isGauntletMatch
+    ? `${state.winnerText} Review the battle report, then continue the gauntlet.`
+    : `${state.winnerText} Review the battle report or start a new match.`);
   refreshAllUI();
 }
+
+function continueFromMatchResults() {
+  if (!pendingGauntletReturn) {
+    return;
+  }
+  pendingGauntletReturn = null;
+  setScreen("gauntlet");
+  refreshAllUI();
+}
+window.continueFromMatchResults = continueFromMatchResults;
 
 let _battleResolving = false;
 function onBattleFinished() {
@@ -3838,6 +3995,23 @@ function updateSfxVolume() {
     return;
   }
   sfxMasterGain.gain.setTargetAtTime(getVolumeScale(gameOptions.sfxVolume), audioCtx.currentTime, 0.02);
+}
+
+function ensureGauntletVictoryAudioElement() {
+  if (gauntletVictoryAudioEl) {
+    return gauntletVictoryAudioEl;
+  }
+  gauntletVictoryAudioEl = new Audio(GAUNTLET_VICTORY_SFX_SRC);
+  gauntletVictoryAudioEl.preload = "auto";
+  return gauntletVictoryAudioEl;
+}
+
+function playGauntletVictorySfx() {
+  const audio = ensureGauntletVictoryAudioElement();
+  audio.pause();
+  audio.currentTime = 0;
+  audio.volume = getVolumeScale(gameOptions.sfxVolume);
+  audio.play().catch(() => {});
 }
 
 function updateMusicVolume() {
@@ -6110,6 +6284,17 @@ matchPlayAgainBtnEl.addEventListener("click", () => {
   startNewMatch();
 });
 
+matchContinueBtnEl?.addEventListener("click", () => {
+  continueFromMatchResults();
+});
+
+matchEndOverlayEl?.addEventListener("click", () => {
+  if (!pendingGauntletReturn) {
+    return;
+  }
+  continueFromMatchResults();
+});
+
 matchRecordsBtnEl?.addEventListener("click", () => {
   setScreen("records");
 });
@@ -6122,6 +6307,7 @@ createTowerSlots();
 setupArenaDrop();
 updateViewportHeight();
 loadOptions();
+initLoadingAnimatic();
 loadGauntletProgress();
 createCards();
 loadPersistentStats();

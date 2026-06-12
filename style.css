@@ -75,6 +75,51 @@ select {
   display: none !important;
 }
 
+.loading-animatic {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  padding:
+    var(--safe-top)
+    var(--safe-right)
+    var(--safe-bottom)
+    var(--safe-left);
+  background: #020617;
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+.loading-animatic.dismissed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-animatic-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #020617;
+}
+
+.loading-animatic-skip {
+  position: absolute;
+  min-width: 4.25rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid rgba(237, 244, 255, 0.28);
+  border-radius: 0.5rem;
+  color: #edf4ff;
+  background: rgba(2, 6, 23, 0.64);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.34);
+}
+
+.loading-animatic-skip {
+  right: calc(0.85rem + var(--safe-right));
+  bottom: calc(0.85rem + var(--safe-bottom));
+}
+
 .app-shell {
   position: relative;
   min-height: var(--app-height);
@@ -1760,6 +1805,88 @@ button:disabled {
 .menu-screen button:disabled,
 .ui-menu-button:disabled {
   filter: grayscale(0.35);
+}
+
+.records-screen {
+  color: var(--ui-theme-ink);
+}
+
+.records-screen .section-topline {
+  justify-content: flex-end;
+}
+
+.records-screen .panel,
+.match-summary-card {
+  border: 8px solid transparent;
+  border-image-slice: var(--ui-panel-slice) fill;
+  border-image-width: 8px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(70, 52, 86, 0.78), rgba(70, 52, 86, 0.78)),
+    var(--ui-panel-texture);
+  background-size: auto, 128px 128px;
+  color: var(--ui-theme-ink);
+  box-shadow: var(--ui-theme-shadow);
+  image-rendering: pixelated;
+}
+
+.records-screen .panel {
+  border-image-source: var(--ui-panel-secondary-frame);
+}
+
+.records-screen .stats-panel,
+.match-summary-card {
+  border-image-source: var(--ui-panel-primary-frame);
+}
+
+.records-screen .panel-header p,
+.records-screen .value-card span,
+.records-screen #records-updated-at,
+.match-result-copy,
+.match-next-goal {
+  color: var(--ui-theme-muted);
+}
+
+.records-screen .eyebrow,
+.match-summary-card .eyebrow {
+  color: #e6c3ff;
+}
+
+.records-screen button,
+.match-actions button {
+  border: 8px solid transparent;
+  border-image-slice: var(--ui-button-slice) fill;
+  border-image-width: 8px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(79, 51, 101, 0.62), rgba(79, 51, 101, 0.62)),
+    var(--ui-panel-texture);
+  background-size: auto, 128px 128px;
+  color: var(--ui-theme-ink);
+  text-shadow: 0 1px 0 rgba(10, 5, 16, 0.66);
+  box-shadow: 0 8px 16px rgba(13, 8, 20, 0.22);
+  image-rendering: pixelated;
+}
+
+.records-screen button:not(.secondary),
+.match-actions button:not(.secondary) {
+  border-image-source: var(--ui-button-primary-frame);
+}
+
+.records-screen button.secondary,
+.match-actions button.secondary {
+  border-image-source: var(--ui-button-secondary-frame);
+  background:
+    linear-gradient(rgba(62, 49, 74, 0.7), rgba(62, 49, 74, 0.7)),
+    var(--ui-panel-texture);
+  background-size: auto, 128px 128px;
+}
+
+.records-screen button:hover,
+.match-actions button:hover {
+  filter: brightness(1.12);
 }
 
 .gauntlet-controls .ui-menu-button {

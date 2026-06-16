@@ -236,7 +236,44 @@ const ART_PACKS = {
     }
   },
   jonCarling: {
-    battlefield: "assets/arena/battlefield_background.png",
+    battlefield: "assets/joncarling/arena/battlefield_background.png",
+    pixiTemplate: {
+      assetRoot: "assets/joncarling/battlefield-template-v4",
+      artboardWidth: 1260,
+      artboardHeight: 1000,
+      safeOffsetX: 420,
+      safeOffsetY: 180,
+      layers: [
+        "01_bleed_area.png",
+        "02_safe_area.png",
+        "03_battlefield.png",
+        "04_tower_dock.png",
+        "05_creep_dock.png",
+        "06_timer_round_panel.png",
+        "07_timer_round_containers.png",
+        "08_score_mana_panel.png",
+        "09_score_mana_containers.png",
+        "10_tower_card_frames.png",
+        "12_creep_card_frames.png",
+        "17_ready_(skips_timer).png"
+      ],
+      timerFillLayer: "16_timer_fill_rect_24x122.png",
+      timerFillRect: { x: 22, y: 201, width: 21, height: 166 },
+      towerCardCenters: [
+        { x: 477, y: 821 },
+        { x: 553, y: 821 },
+        { x: 629, y: 821 },
+        { x: 705, y: 821 },
+        { x: 781, y: 821 }
+      ],
+      creepCardCenters: [
+        { x: 477, y: 902 },
+        { x: 553, y: 902 },
+        { x: 629, y: 902 },
+        { x: 705, y: 902 },
+        { x: 781, y: 902 }
+      ]
+    },
     towers: {
       violet: "assets/towers/violet.png",
       yellow: "assets/towers/yellow.png",
@@ -343,7 +380,7 @@ const DEFAULT_OPTIONS = {
   difficulty: "yellow",
   artPack: "unfuneralOD",
   musicPack: "christopherJosephUehlein",
-  musicVolume: 20,
+  musicVolume: 40,
   sfxVolume: 85
 };
 const GAUNTLET_STORAGE_KEY = "lineTowerWarsGauntlet";

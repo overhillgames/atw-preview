@@ -76,6 +76,7 @@ select {
 }
 
 .loading-animatic {
+  --loading-video-aspect: 1.777778;
   position: fixed;
   inset: 0;
   z-index: 500;
@@ -86,7 +87,9 @@ select {
     var(--safe-right)
     var(--safe-bottom)
     var(--safe-left);
-  background: #020617;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #000000;
   opacity: 1;
   transition: opacity 220ms ease;
 }
@@ -96,11 +99,27 @@ select {
   pointer-events: none;
 }
 
+.loading-animatic-frame {
+  display: grid;
+  place-items: center;
+  width: min(100%, calc((var(--app-height) - var(--safe-top) - var(--safe-bottom)) * var(--loading-video-aspect)));
+  height: min(100%, calc((100vw - var(--safe-left) - var(--safe-right)) / var(--loading-video-aspect)));
+  aspect-ratio: var(--loading-video-aspect);
+  background: #000000;
+}
+
 .loading-animatic-video {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: #020617;
+  background: #000000;
+  opacity: 1;
+  transition: opacity 1000ms linear;
+}
+
+.loading-animatic-video.fading-out {
+  opacity: 0;
 }
 
 .loading-animatic-skip {
@@ -686,7 +705,6 @@ select {
 
 .music-pack-option {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.7rem;
   min-width: 0;
   min-height: 5.75rem;
@@ -696,6 +714,15 @@ select {
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 0.85rem;
   background: rgba(11, 22, 41, 0.74);
+}
+
+.music-pack-option:not(.featured) {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.music-pack-option.featured {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
 }
 
 .art-pack-option[aria-checked="true"] {
@@ -751,10 +778,43 @@ select {
   border-color: var(--accent);
 }
 
+.music-pack-feature {
+  display: block;
+  aspect-ratio: 1;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: #000000;
+}
+
+.music-pack-option:not(.locked) .music-pack-feature:hover {
+  border-color: var(--accent);
+}
+
+.music-pack-feature-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .music-pack-icon {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.music-pack-meta-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  min-width: 0;
+  align-items: center;
+}
+
+.music-pack-option:not(.featured) .music-pack-meta-row {
+  display: contents;
 }
 
 .music-pack-name-row {
@@ -778,6 +838,10 @@ select {
 
 .music-lock {
   grid-column: 2;
+}
+
+.music-pack-option.featured .music-lock {
+  grid-column: auto;
 }
 
 .art-thumb-grid {

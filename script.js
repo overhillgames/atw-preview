@@ -12,7 +12,11 @@ const SHOW_RANGE_ARCS = false;
 const STATS_STORAGE_KEY = "bline-tower-wars-match-stats";
 const MATCH_STATE_STORAGE_KEY = "line-tower-wars-active-match";
 const OPTIONS_STORAGE_KEY = "bline-tower-wars-options";
-const INTRO_ANIMATIC_MAX_SECONDS = 12;
+const INTRO_ANIMATIC_MAX_SECONDS = 20;
+const INTRO_ANIMATIC_SEQUENCE = [
+  "assets/intro/overhill-animatic-with-urs-audio.mp4",
+  "assets/intro/carling-arts-zoom-logo.mp4"
+];
 const GAUNTLET_VICTORY_SFX_SRC = "assets/sfx/gauntlet-victory.wav";
 
 // Multiplayer mode — set by lobby.js when a match is found, cleared on exit
@@ -379,7 +383,8 @@ const MUSIC_PACK_OPTIONS = [
     id: "christopherJosephUehlein",
     name: "Christopher Joseph Uehlein",
     unlocked: true,
-    icon: "assets/music/composers/christopher-joseph-uehlein.png",
+    icon: "assets/music/composers/christopher-joseph-uehlein-spaceman.png",
+    featureImage: "assets/music/composers/christopher-joseph-uehlein-spaceman.png",
     link: "https://overhill.games",
     tracks: [
       { title: "ATW Track 01 Original", src: "assets/music/christopher-joseph-uehlein-track-1.m4a" },
@@ -391,14 +396,28 @@ const MUSIC_PACK_OPTIONS = [
     name: "Martin Biesecke",
     unlocked: true,
     icon: "assets/music/composers/martin-biesecke.png",
-    link: "https://music.apple.com/us/artist/martin-biesecke/1452071768",
+    featureImage: "assets/music/composers/martin-biesecke-mayybie-logo.png",
+    link: "https://linktr.ee/maaybie",
     tracks: [
       { title: "Calm Stamets Point Theme", src: "assets/music/martin-biesecke-track-1.m4a" },
       { title: "Singularity Theme", src: "assets/music/martin-biesecke-track-2.m4a" },
       { title: "Martin Robot Combo", src: "assets/music/martin-biesecke-track-3.m4a" }
     ]
   },
-  { id: "composer3", name: "Music Slot 3", unlocked: false, trackCount: 0 },
+  {
+    id: "appalachianDeathTrap",
+    name: "Appalachian Death Trap",
+    unlocked: true,
+    icon: "assets/music/composers/appalachian-death-trap-link.png",
+    featureImage: "assets/music/composers/appalachian-death-trap-logo.jpg",
+    link: "https://linktr.ee/adeathtrap",
+    tracks: [
+      { title: "Oxford Cloth Pyscho", src: "assets/music/appalachian-death-trap-track-1.m4a" },
+      { title: "Into the Wilderness", src: "assets/music/appalachian-death-trap-track-2.m4a" },
+      { title: "Stars", src: "assets/music/appalachian-death-trap-track-3.m4a" },
+      { title: "Faces be Damed", src: "assets/music/appalachian-death-trap-track-4.m4a" }
+    ]
+  },
   { id: "composer4", name: "Music Slot 4", unlocked: false, trackCount: 0 },
   { id: "composer5", name: "Music Slot 5", unlocked: false, trackCount: 0 },
   { id: "composer6", name: "Music Slot 6", unlocked: false, trackCount: 0 },
@@ -776,6 +795,8 @@ let wasPausedBeforeBackground = false;
 let laneBackgroundCanvas = null;
 let loadingAnimaticDismissed = false;
 let loadingAnimaticTimer = null;
+let loadingAnimaticIndex = 0;
+let loadingAnimaticMutedFallback = false;
 const pixiState = {
   app: null,
   ready: false,
@@ -1537,12 +1558,23 @@ function renderMusicPackOptions() {
     const iconMarkup = option.icon && option.link
       ? `<a class="music-composer-link" href="${option.link}" target="_blank" rel="noopener noreferrer" aria-label="${option.name} link">${icon}</a>`
       : icon;
+    const featureMarkup = option.featureImage
+      ? `
+        <span class="music-pack-feature">
+          <img class="music-pack-feature-image" src="${option.featureImage}" alt="" />
+        </span>
+      `
+      : "";
+    const optionClass = `music-pack-option${option.featureImage ? " featured" : ""}${option.unlocked ? "" : " locked"}`;
     return `
-      <div class="music-pack-option${option.unlocked ? "" : " locked"}" role="radio" tabindex="${option.unlocked ? "0" : "-1"}" aria-checked="false" data-music-pack="${option.id}" ${option.unlocked ? "" : "aria-disabled=\"true\""} aria-label="${option.name}${option.unlocked ? "" : " locked"}">
-        ${iconMarkup}
-        <span class="music-pack-name-row">
-          <strong>${option.name}</strong>
-          <span>${trackLabel}</span>
+      <div class="${optionClass}" role="radio" tabindex="${option.unlocked ? "0" : "-1"}" aria-checked="false" data-music-pack="${option.id}" ${option.unlocked ? "" : "aria-disabled=\"true\""} aria-label="${option.name}${option.unlocked ? "" : " locked"}">
+        ${featureMarkup}
+        <span class="music-pack-meta-row">
+          ${iconMarkup}
+          <span class="music-pack-name-row">
+            <strong>${option.name}</strong>
+            <span>${trackLabel}</span>
+          </span>
         </span>
         ${lockedLabel}
       </div>
@@ -2006,11 +2038,55 @@ function dismissLoadingAnimatic() {
   }, 260);
 }
 
+function setLoadingAnimaticSource(index) {
+  if (!loadingAnimaticVideoEl || !INTRO_ANIMATIC_SEQUENCE[index]) {
+    return false;
+  }
+  loadingAnimaticVideoEl.classList.remove("fading-out");
+  loadingAnimaticVideoEl.src = INTRO_ANIMATIC_SEQUENCE[index];
+  loadingAnimaticVideoEl.load();
+  return true;
+}
+
+function syncLoadingAnimaticAspect() {
+  if (!loadingAnimaticEl || !loadingAnimaticVideoEl) {
+    return;
+  }
+  const { videoWidth, videoHeight } = loadingAnimaticVideoEl;
+  if (!videoWidth || !videoHeight) {
+    return;
+  }
+  loadingAnimaticEl.style.setProperty("--loading-video-aspect", String(videoWidth / videoHeight));
+}
+
+function updateLoadingAnimaticFade() {
+  if (!loadingAnimaticVideoEl || loadingAnimaticDismissed) {
+    return;
+  }
+  const isFinalAnimatic = loadingAnimaticIndex === INTRO_ANIMATIC_SEQUENCE.length - 1;
+  const { currentTime, duration } = loadingAnimaticVideoEl;
+  if (isFinalAnimatic && Number.isFinite(duration) && duration - currentTime <= 1.1) {
+    loadingAnimaticVideoEl.classList.add("fading-out");
+  }
+}
+
+function advanceLoadingAnimatic() {
+  if (loadingAnimaticDismissed) {
+    return;
+  }
+  loadingAnimaticIndex += 1;
+  if (loadingAnimaticIndex >= INTRO_ANIMATIC_SEQUENCE.length || !setLoadingAnimaticSource(loadingAnimaticIndex)) {
+    dismissLoadingAnimatic();
+    return;
+  }
+  window.setTimeout(tryPlayLoadingAnimaticWithSound, 0);
+}
+
 function tryPlayLoadingAnimaticWithSound() {
   if (loadingAnimaticDismissed || !loadingAnimaticVideoEl) {
     return;
   }
-  loadingAnimaticVideoEl.muted = false;
+  loadingAnimaticVideoEl.muted = loadingAnimaticMutedFallback;
   loadingAnimaticVideoEl.volume = getVolumeScale(gameOptions.sfxVolume);
   const playPromise = loadingAnimaticVideoEl.play();
   if (!playPromise || typeof playPromise.catch !== "function") {
@@ -2021,8 +2097,9 @@ function tryPlayLoadingAnimaticWithSound() {
       return;
     }
     loadingAnimaticVideoEl.muted = true;
+    loadingAnimaticMutedFallback = true;
     loadingAnimaticVideoEl.play().catch(() => {
-      window.setTimeout(dismissLoadingAnimatic, 800);
+      window.setTimeout(advanceLoadingAnimatic, 800);
     });
   });
 }
@@ -2031,11 +2108,17 @@ function initLoadingAnimatic() {
   if (!loadingAnimaticEl || !loadingAnimaticVideoEl) {
     return;
   }
+  if (!setLoadingAnimaticSource(loadingAnimaticIndex)) {
+    dismissLoadingAnimatic();
+    return;
+  }
   loadingAnimaticVideoEl.volume = getVolumeScale(gameOptions.sfxVolume);
-  loadingAnimaticVideoEl.addEventListener("ended", dismissLoadingAnimatic, { once: true });
+  loadingAnimaticVideoEl.addEventListener("loadedmetadata", syncLoadingAnimaticAspect);
+  loadingAnimaticVideoEl.addEventListener("timeupdate", updateLoadingAnimaticFade);
+  loadingAnimaticVideoEl.addEventListener("ended", advanceLoadingAnimatic);
   loadingAnimaticVideoEl.addEventListener("error", () => {
-    window.setTimeout(dismissLoadingAnimatic, 800);
-  }, { once: true });
+    window.setTimeout(advanceLoadingAnimatic, 800);
+  });
   loadingAnimaticSkipBtnEl?.addEventListener("click", () => {
     unlockAudioFromGesture();
     dismissLoadingAnimatic();

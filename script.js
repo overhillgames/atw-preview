@@ -968,6 +968,7 @@ function measureGameChromeHeight() {
 function applyGameFrameLayout(layout) {
   gameFrameLayout = layout;
   window.gameFrameLayout = gameFrameLayout;
+  document.documentElement.style.setProperty("--app-width", `${layout.viewportWidth}px`);
   document.documentElement.style.setProperty("--app-height", `${layout.viewportHeight}px`);
   document.documentElement.style.setProperty("--game-frame-width", `${layout.frameWidth}px`);
   document.documentElement.style.setProperty("--game-frame-height", `${layout.frameHeight}px`);

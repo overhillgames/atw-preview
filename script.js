@@ -1201,15 +1201,21 @@ function normalizePersistentStats(raw) {
   return stats;
 }
 
+function canUsePreviewStatsEndpoint() {
+  return ["127.0.0.1", "localhost", "::1"].includes(window.location.hostname);
+}
+
 async function loadPersistentStats() {
-  try {
-    const response = await fetch("./stats", { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error(`Stats load failed: ${response.status}`);
+  if (canUsePreviewStatsEndpoint()) {
+    try {
+      const response = await fetch("./stats", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`Stats load failed: ${response.status}`);
+      }
+      persistentStats = normalizePersistentStats(await response.json());
+      return;
+    } catch {
     }
-    persistentStats = normalizePersistentStats(await response.json());
-    return;
-  } catch {
   }
 
   try {
@@ -1229,17 +1235,19 @@ async function persistStatsNow() {
   persistentStats.updatedAt = new Date().toISOString();
   const body = JSON.stringify(persistentStats, null, 2);
 
-  try {
-    const response = await fetch("./stats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body
-    });
-    if (!response.ok) {
-      throw new Error(`Stats save failed: ${response.status}`);
+  if (canUsePreviewStatsEndpoint()) {
+    try {
+      const response = await fetch("./stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body
+      });
+      if (!response.ok) {
+        throw new Error(`Stats save failed: ${response.status}`);
+      }
+      return;
+    } catch {
     }
-    return;
-  } catch {
   }
 
   try {

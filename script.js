@@ -294,6 +294,15 @@ const ART_PACKS = {
       brute: { path: "assets/creeps/brute-sprite-sheet.png", frameWidth: 270, frameHeight: 272, frames: 4, fps: 6 },
       wisp: { path: "assets/creeps/wisp-sprite-sheet.png", frameWidth: 242, frameHeight: 260, frames: 4, fps: 6 },
       tank: { path: "assets/creeps/tank-sprite-sheet.png", frameWidth: 270, frameHeight: 302, frames: 4, fps: 6 }
+    },
+    creepKillEffect: {
+      path: "assets/joncarling/effects/creep-kill-explosion.png",
+      frameWidth: 97,
+      frameHeight: 83,
+      frames: 12,
+      fps: 12.5,
+      renderWidth: 78,
+      renderHeight: 67
     }
   },
   unfuneralOD: {
@@ -634,6 +643,8 @@ let towerFireSheetConfig = activeArtPack.towerFireSheets || {};
 let attackerIconPaths = activeArtPack.attackerIcons;
 let attackerSpriteConfig = activeArtPack.attackerSprites;
 let attackerSprites = {};
+let creepKillEffectConfig = activeArtPack.creepKillEffect || null;
+let creepKillEffectSprite = null;
 const battlefieldBackgroundImage = new Image();
 document.documentElement.dataset.artPack = activeArtPackId;
 applyArtPack(activeArtPackId);
@@ -765,6 +776,7 @@ const state = {
   towerFlashes: [],
   towerFireAnimations: [],
   deathParticles: [],
+  deathEffects: [],
   nextUnitId: 1,
   nextProjectileId: 1,
   nextFireBurstId: 1,
@@ -1276,6 +1288,7 @@ function saveMatchStateNow() {
     towerFlashes: state.towerFlashes,
     towerFireAnimations: state.towerFireAnimations,
     deathParticles: state.deathParticles,
+    deathEffects: state.deathEffects,
     nextUnitId: state.nextUnitId,
     nextProjectileId: state.nextProjectileId,
     nextFireBurstId: state.nextFireBurstId,
@@ -1677,12 +1690,18 @@ function applyArtPack(artPackId, rerender = false) {
   towerFireSheetConfig = activeArtPack.towerFireSheets || {};
   attackerIconPaths = activeArtPack.attackerIcons;
   attackerSpriteConfig = activeArtPack.attackerSprites;
+  creepKillEffectConfig = activeArtPack.creepKillEffect || null;
   attackerSprites = {};
   for (const attackerId of Object.keys(attackerSpriteConfig)) {
     const cfg = attackerSpriteConfig[attackerId];
     const img = new Image();
     img.src = cfg.path;
     attackerSprites[attackerId] = img;
+  }
+  creepKillEffectSprite = null;
+  if (creepKillEffectConfig?.path) {
+    creepKillEffectSprite = new Image();
+    creepKillEffectSprite.src = creepKillEffectConfig.path;
   }
   battlefieldBackgroundImage.src = activeArtPack.battlefield || "";
   document.documentElement.dataset.artPack = activeArtPackId;
@@ -2340,6 +2359,7 @@ function resetMatch() {
   state.towerFlashes = [];
   state.towerFireAnimations = [];
   state.deathParticles = [];
+  state.deathEffects = [];
   state.nextUnitId = 1;
   state.nextProjectileId = 1;
   state.nextFireBurstId = 1;
@@ -3046,6 +3066,7 @@ function _doLaunchWave() {
   state.towerFlashes = [];
   state.towerFireAnimations = [];
   state.deathParticles = [];
+  state.deathEffects = [];
 
   state.playerQueue = [];
   state.aiQueue = [];
@@ -4483,6 +4504,15 @@ function spawnTowerFireAnimation(owner, slotIndex, towerId) {
 
 function spawnDeathParticles(unit) {
   const origin = attackerPosition(unit);
+  if (creepKillEffectConfig) {
+    state.deathEffects.push({
+      x: origin.x,
+      y: origin.y,
+      life: (creepKillEffectConfig.frames || 1) / Math.max(1, creepKillEffectConfig.fps || 12),
+      maxLife: (creepKillEffectConfig.frames || 1) / Math.max(1, creepKillEffectConfig.fps || 12)
+    });
+    return;
+  }
   const particleCount = 12;
   for (let i = 0; i < particleCount; i += 1) {
     const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.25;
@@ -4743,6 +4773,20 @@ function updateDeathParticles(dt) {
   state.deathParticles = active;
 }
 
+function updateDeathEffects(dt) {
+  if (!state.deathEffects.length) {
+    return;
+  }
+  const active = [];
+  for (const effect of state.deathEffects) {
+    effect.life -= dt;
+    if (effect.life > 0) {
+      active.push(effect);
+    }
+  }
+  state.deathEffects = active;
+}
+
 function updateAttackers(dt) {
   let playerScored = 0;
   let aiScored = 0;
@@ -4881,6 +4925,7 @@ function updateGame(dt) {
   updateTowerFireAnimations(dt);
   updateYellowLeaps(dt);
   updateDeathParticles(dt);
+  updateDeathEffects(dt);
 
     if (
       state.attackersPlayer.length === 0 &&
@@ -4888,7 +4933,8 @@ function updateGame(dt) {
       state.projectiles.length === 0 &&
       state.fireBursts.length === 0 &&
       state.yellowLeaps.length === 0 &&
-      state.deathParticles.length === 0
+      state.deathParticles.length === 0 &&
+      state.deathEffects.length === 0
     ) {
       onBattleFinished();
     }
@@ -6138,6 +6184,36 @@ function drawDeathParticles() {
   }
 }
 
+function drawDeathEffects() {
+  const cfg = creepKillEffectConfig;
+  const sprite = creepKillEffectSprite;
+  if (!cfg || !sprite?.complete || sprite.naturalWidth <= 0) {
+    return;
+  }
+  const frameCount = cfg.frames || 1;
+  const frameWidth = cfg.frameWidth || Math.floor(sprite.naturalWidth / frameCount);
+  const frameHeight = cfg.frameHeight || sprite.naturalHeight;
+  const renderWidth = cfg.renderWidth || frameWidth;
+  const renderHeight = cfg.renderHeight || frameHeight;
+  for (const effect of state.deathEffects) {
+    const progress = clamp(1 - effect.life / effect.maxLife, 0, 0.999);
+    const frame = Math.min(frameCount - 1, Math.floor(progress * frameCount));
+    const x = canvas.width * effect.x;
+    const y = canvas.height * effect.y;
+    ctx.drawImage(
+      sprite,
+      frame * frameWidth,
+      0,
+      frameWidth,
+      frameHeight,
+      x - renderWidth / 2,
+      y - renderHeight / 2,
+      renderWidth,
+      renderHeight
+    );
+  }
+}
+
 function drawRoundBanner() {
   if (state.phase !== "banner" || state.roundBannerTimer <= 0) {
     return;
@@ -6176,6 +6252,7 @@ function drawBoard() {
   drawYellowLeaps();
   drawTowerFlashes();
   drawDeathParticles();
+  drawDeathEffects();
   drawRoundBanner();
   updatePixiDynamicTexture();
   updatePixiTowers();

@@ -103,6 +103,7 @@ const LEGACY_TOWER_ID_ALIASES = {
   orange: "blue"
 };
 const LEGACY_ART_PACK_ID_ALIASES = {
+  jonCarlingFantasy: "jonCarlingLight"
 };
 
 function normalizeTowerId(towerId) {
@@ -305,6 +306,133 @@ const ART_PACKS = {
       renderHeight: 67
     }
   },
+  jonCarlingLight: {
+    battlefield: "assets/joncarling/arena/battlefield_background.png",
+    pixiTemplate: {
+      assetRoot: "assets/joncarling/battlefield-template-v4",
+      artboardWidth: 1260,
+      artboardHeight: 1000,
+      safeOffsetX: 420,
+      safeOffsetY: 180,
+      layers: [
+        "01_bleed_area.png",
+        "02_safe_area.png",
+        "03_battlefield.png",
+        "04_tower_dock.png",
+        "05_creep_dock.png",
+        "06_timer_round_panel.png",
+        "07_timer_round_containers.png",
+        "08_score_mana_panel.png",
+        "09_score_mana_containers.png",
+        "10_tower_card_frames.png",
+        "12_creep_card_frames.png",
+        "17_ready_(skips_timer).png"
+      ],
+      timerFillLayer: "16_timer_fill_rect_24x122.png",
+      markerPath: "assets/joncarling-light/markers/battlefield-tower-position.png",
+      markerSize: 48,
+      timerFillRect: { x: 22, y: 201, width: 21, height: 166 },
+      towerCardCenters: [
+        { x: 477, y: 821 },
+        { x: 553, y: 821 },
+        { x: 629, y: 821 },
+        { x: 705, y: 821 },
+        { x: 781, y: 821 }
+      ],
+      creepCardCenters: [
+        { x: 477, y: 902 },
+        { x: 553, y: 902 },
+        { x: 629, y: 902 },
+        { x: 705, y: 902 },
+        { x: 781, y: 902 }
+      ]
+    },
+    towers: {
+      violet: "assets/joncarling-light/towers/violet.png",
+      yellow: "assets/joncarling-light/towers/yellow.png",
+      red: "assets/joncarling-light/towers/red.png",
+      green: "assets/joncarling-light/towers/green.png",
+      blue: "assets/joncarling-light/towers/blue.png"
+    },
+    towerFireSheets: {
+      violet: { path: "assets/joncarling-light/towers/sheets/violet-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+      yellow: { path: "assets/joncarling-light/towers/sheets/yellow-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+      red: { path: "assets/joncarling-light/towers/sheets/red-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+      green: { path: "assets/joncarling-light/towers/sheets/green-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+      blue: { path: "assets/joncarling-light/towers/sheets/blue-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 }
+    },
+    attackerIcons: {
+      imp: null,
+      runner: null,
+      brute: null,
+      wisp: null,
+      tank: null
+    },
+    attackerSprites: {
+      imp: { path: "assets/creeps/imp-sprite-sheet.png", frameWidth: 272, frameHeight: 206, frames: 4, fps: 6 },
+      runner: { path: "assets/creeps/runner-sprite-sheet.png", frameWidth: 276, frameHeight: 286, frames: 4, fps: 6 },
+      brute: { path: "assets/creeps/brute-sprite-sheet.png", frameWidth: 270, frameHeight: 272, frames: 4, fps: 6 },
+      wisp: { path: "assets/creeps/wisp-sprite-sheet.png", frameWidth: 242, frameHeight: 260, frames: 4, fps: 6 },
+      tank: { path: "assets/creeps/tank-sprite-sheet.png", frameWidth: 270, frameHeight: 302, frames: 4, fps: 6 }
+    },
+    creepKillEffect: {
+      path: "assets/joncarling/effects/creep-kill-explosion.png",
+      frameWidth: 97,
+      frameHeight: 83,
+      frames: 12,
+      fps: 12.5,
+      renderWidth: 78,
+      renderHeight: 67
+    },
+    sideAssets: {
+      player: {
+        towers: {
+          violet: "assets/joncarling-light/towers/violet.png",
+          yellow: "assets/joncarling-light/towers/yellow.png",
+          red: "assets/joncarling-light/towers/red.png",
+          green: "assets/joncarling-light/towers/green.png",
+          blue: "assets/joncarling-light/towers/blue.png"
+        },
+        towerFireSheets: {
+          violet: { path: "assets/joncarling-light/towers/sheets/violet-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+          yellow: { path: "assets/joncarling-light/towers/sheets/yellow-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+          red: { path: "assets/joncarling-light/towers/sheets/red-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+          green: { path: "assets/joncarling-light/towers/sheets/green-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+          blue: { path: "assets/joncarling-light/towers/sheets/blue-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 }
+        },
+        attackerSprites: {
+          imp: { path: "assets/creeps/imp-sprite-sheet.png", frameWidth: 272, frameHeight: 206, frames: 4, fps: 6 },
+          runner: { path: "assets/creeps/runner-sprite-sheet.png", frameWidth: 276, frameHeight: 286, frames: 4, fps: 6 },
+          brute: { path: "assets/creeps/brute-sprite-sheet.png", frameWidth: 270, frameHeight: 272, frames: 4, fps: 6 },
+          wisp: { path: "assets/creeps/wisp-sprite-sheet.png", frameWidth: 242, frameHeight: 260, frames: 4, fps: 6 },
+          tank: { path: "assets/creeps/tank-sprite-sheet.png", frameWidth: 270, frameHeight: 302, frames: 4, fps: 6 }
+        }
+      },
+      ai: {
+        towers: {
+          violet: "assets/joncarling-light/towers/violet.png",
+          yellow: "assets/joncarling-light/towers/yellow.png",
+          red: "assets/joncarling-light/towers/red.png",
+          green: "assets/joncarling-light/towers/green.png",
+          blue: "assets/joncarling-light/towers/blue.png"
+        },
+        towerFireSheets: {
+          violet: { path: "assets/joncarling-light/towers/sheets/violet-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+          yellow: { path: "assets/joncarling-light/towers/sheets/yellow-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+          red: { path: "assets/joncarling-light/towers/sheets/red-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+          green: { path: "assets/joncarling-light/towers/sheets/green-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+          blue: { path: "assets/joncarling-light/towers/sheets/blue-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 }
+        },
+        attackerSprites: {
+          imp: { path: "assets/creeps/imp-sprite-sheet.png", frameWidth: 272, frameHeight: 206, frames: 4, fps: 6 },
+          runner: { path: "assets/creeps/runner-sprite-sheet.png", frameWidth: 276, frameHeight: 286, frames: 4, fps: 6 },
+          brute: { path: "assets/creeps/brute-sprite-sheet.png", frameWidth: 270, frameHeight: 272, frames: 4, fps: 6 },
+          wisp: { path: "assets/creeps/wisp-sprite-sheet.png", frameWidth: 242, frameHeight: 260, frames: 4, fps: 6 },
+          tank: { path: "assets/creeps/tank-sprite-sheet.png", frameWidth: 270, frameHeight: 302, frames: 4, fps: 6 }
+        }
+      }
+    }
+  },
   unfuneralOD: {
     battlefield: "assets/unfuneralod/arena/arena2.png",
     pixiTemplate: {
@@ -377,6 +505,84 @@ const ART_PACKS = {
     }
   }
 };
+const JON_CARLING_LIGHT_TOWER_ASSETS = {
+  towers: {
+    violet: "assets/joncarling-light/towers/violet.png",
+    yellow: "assets/joncarling-light/towers/yellow.png",
+    red: "assets/joncarling-light/towers/red.png",
+    green: "assets/joncarling-light/towers/green.png",
+    blue: "assets/joncarling-light/towers/blue.png"
+  },
+  towerFireSheets: {
+    violet: { path: "assets/joncarling-light/towers/sheets/violet-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+    yellow: { path: "assets/joncarling-light/towers/sheets/yellow-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+    red: { path: "assets/joncarling-light/towers/sheets/red-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+    green: { path: "assets/joncarling-light/towers/sheets/green-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+    blue: { path: "assets/joncarling-light/towers/sheets/blue-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 }
+  }
+};
+const JON_CARLING_DARK_TOWER_ASSETS = {
+  towers: {
+    violet: "assets/joncarling-dark/towers/violet.png",
+    yellow: "assets/joncarling-dark/towers/yellow.png",
+    red: "assets/joncarling-dark/towers/red.png",
+    green: "assets/joncarling-dark/towers/green.png",
+    blue: "assets/joncarling-dark/towers/blue.png"
+  },
+  towerFireSheets: {
+    violet: { path: "assets/joncarling-dark/towers/sheets/violet-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+    yellow: { path: "assets/joncarling-dark/towers/sheets/yellow-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+    red: { path: "assets/joncarling-dark/towers/sheets/red-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+    green: { path: "assets/joncarling-dark/towers/sheets/green-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 },
+    blue: { path: "assets/joncarling-dark/towers/sheets/blue-fire.png", frameWidth: 512, frameHeight: 624, frames: 4, duration: 0.24 }
+  }
+};
+const JON_CARLING_LIGHT_UNIT_ASSETS = {
+  attackerSprites: {
+    imp: { path: "assets/joncarling-light/creeps/imp.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true },
+    runner: { path: "assets/joncarling-light/creeps/runner.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true },
+    brute: { path: "assets/joncarling-light/creeps/brute.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true },
+    wisp: { path: "assets/joncarling-light/creeps/wisp.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true },
+    tank: { path: "assets/joncarling-light/creeps/tank.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true }
+  }
+};
+const JON_CARLING_DARK_UNIT_ASSETS = {
+  attackerSprites: {
+    imp: { path: "assets/joncarling-dark/creeps/imp.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true },
+    runner: { path: "assets/joncarling-dark/creeps/runner.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true },
+    brute: { path: "assets/joncarling-dark/creeps/brute.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true },
+    wisp: { path: "assets/joncarling-dark/creeps/wisp.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true },
+    tank: { path: "assets/joncarling-dark/creeps/tank.png", frameWidth: 512, frameHeight: 512, frames: 4, fps: 6, renderWidth: 64, renderHeight: 64, previewFrame: true }
+  }
+};
+ART_PACKS.jonCarlingLight.sideAssets.player = {
+  ...ART_PACKS.jonCarlingLight.sideAssets.player,
+  ...JON_CARLING_LIGHT_TOWER_ASSETS,
+  ...JON_CARLING_LIGHT_UNIT_ASSETS
+};
+ART_PACKS.jonCarlingLight.sideAssets.ai = {
+  ...ART_PACKS.jonCarlingLight.sideAssets.ai,
+  ...JON_CARLING_DARK_TOWER_ASSETS,
+  ...JON_CARLING_DARK_UNIT_ASSETS
+};
+ART_PACKS.jonCarlingDark = {
+  ...ART_PACKS.jonCarlingLight,
+  towers: JON_CARLING_DARK_TOWER_ASSETS.towers,
+  towerFireSheets: JON_CARLING_DARK_TOWER_ASSETS.towerFireSheets,
+  attackerSprites: JON_CARLING_DARK_UNIT_ASSETS.attackerSprites,
+  sideAssets: {
+    player: {
+      ...ART_PACKS.jonCarlingLight.sideAssets.player,
+      ...JON_CARLING_DARK_TOWER_ASSETS,
+      ...JON_CARLING_DARK_UNIT_ASSETS
+    },
+    ai: {
+      ...ART_PACKS.jonCarlingLight.sideAssets.ai,
+      ...JON_CARLING_LIGHT_TOWER_ASSETS,
+      ...JON_CARLING_LIGHT_UNIT_ASSETS
+    }
+  }
+};
 
 const attackerDefs = [
   { id: "imp", name: "Imp", cost: 2, hp: 18, speed: 0.09, color: "#1f2937" },
@@ -417,6 +623,8 @@ const GAUNTLET_STAGES = [
 const ART_PACK_OPTIONS = [
   { id: "classic", name: "Classic", unlocked: true, preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
   { id: "jonCarling", name: "Jon Carling", unlocked: true, icon: "assets/ui/artist-icons/joncarling.png", instagram: "https://www.instagram.com/joncarling/", quadBackground: "assets/arena/quad-backgrounds/joncarling.png", preview: { creeps: ["imp", "runner"], towers: ["violet", "yellow"] } },
+  { id: "jonCarlingLight", name: "Jon Carling Light", unlocked: true, icon: "assets/ui/artist-icons/joncarling.png", instagram: "https://www.instagram.com/joncarling/", quadBackground: "assets/arena/quad-backgrounds/joncarling.png", preview: { creeps: ["brute", "wisp"], towers: ["red", "blue"] } },
+  { id: "jonCarlingDark", name: "Jon Carling Dark", unlocked: true, icon: "assets/ui/artist-icons/joncarling.png", instagram: "https://www.instagram.com/joncarling/", quadBackground: "assets/arena/quad-backgrounds/joncarling.png", preview: { creeps: ["brute", "wisp"], towers: ["red", "blue"] } },
   { id: "unfuneralOD", name: "UnfuneralOD", unlocked: true, icon: "assets/ui/artist-icons/unfuneralod.png", instagram: "https://www.instagram.com/unfuneralod/", quadBackground: "assets/arena/quad-backgrounds/unfuneralod.png", preview: { creeps: ["imp", "runner"], towers: ["violet", "green"] } },
   { id: "artist4", name: "Artist Slot 4", unlocked: false, preview: { creeps: ["brute", "wisp"], towers: ["violet", "yellow"] } },
   { id: "artist5", name: "Artist Slot 5", unlocked: false, preview: { creeps: ["runner", "tank"], towers: ["green", "blue"] } },
@@ -639,10 +847,15 @@ let gameOptions = { ...DEFAULT_OPTIONS };
 let activeArtPackId = DEFAULT_OPTIONS.artPack;
 let activeArtPack = ART_PACKS[activeArtPackId] || ART_PACKS[DEFAULT_OPTIONS.artPack];
 let towerSpritePaths = activeArtPack.towers;
+let towerSpritePathSets = { player: activeArtPack.towers, ai: activeArtPack.towers };
 let towerFireSheetConfig = activeArtPack.towerFireSheets || {};
+let towerFireSheetConfigSets = { player: activeArtPack.towerFireSheets || {}, ai: activeArtPack.towerFireSheets || {} };
 let attackerIconPaths = activeArtPack.attackerIcons;
+let attackerIconPathSets = { player: activeArtPack.attackerIcons, ai: activeArtPack.attackerIcons };
 let attackerSpriteConfig = activeArtPack.attackerSprites;
+let attackerSpriteConfigSets = { player: activeArtPack.attackerSprites, ai: activeArtPack.attackerSprites };
 let attackerSprites = {};
+let attackerSpriteSets = { player: {}, ai: {} };
 let creepKillEffectConfig = activeArtPack.creepKillEffect || null;
 let creepKillEffectSprite = null;
 const battlefieldBackgroundImage = new Image();
@@ -854,6 +1067,7 @@ const pixiState = {
   battlefieldMask: null,
   highZLayer: null,
   markerLayer: null,
+  markerTexture: null,
   uiLayer: null,
   towerLayer: null,
   dockIconLayer: null,
@@ -864,14 +1078,18 @@ const pixiState = {
   legacyTexture: null,
   legacySprite: null,
   towerTextures: {},
+  towerTextureSets: { player: {}, ai: {} },
   towerFireTextures: {},
+  towerFireTextureSets: { player: {}, ai: {} },
   attackerTextures: {},
+  attackerTextureSets: { player: {}, ai: {} },
   towerSprites: new Map(),
   cardSprites: [],
   cardText: [],
   cardEntries: [],
   hudText: {},
   lastTowerSignature: "",
+  lastMarkerSignature: "",
   lastCardSignature: "",
   lastHudSignature: ""
 };
@@ -1549,8 +1767,14 @@ function renderArtPackOptions() {
     const pack = getArtPackForPreview(option);
     const fallbackPack = ART_PACKS[DEFAULT_OPTIONS.artPack];
     const preview = option.preview;
-    const towerA = pack.towers?.[preview.towers[0]] || fallbackPack.towers[preview.towers[0]];
-    const towerB = pack.towers?.[preview.towers[1]] || fallbackPack.towers[preview.towers[1]];
+    const previewPack = {
+      ...pack,
+      towers: getArtPackSideAssets(pack, "player", "towers"),
+      attackerIcons: getArtPackSideAssets(pack, "player", "attackerIcons"),
+      attackerSprites: getArtPackSideAssets(pack, "player", "attackerSprites")
+    };
+    const towerA = previewPack.towers?.[preview.towers[0]] || fallbackPack.towers[preview.towers[0]];
+    const towerB = previewPack.towers?.[preview.towers[1]] || fallbackPack.towers[preview.towers[1]];
     const lockedLabel = option.unlocked ? "" : `<span class="art-lock">In-App Purchase</span>`;
     const iconLink = option.icon && option.instagram
       ? `<a class="artist-social-link" href="${option.instagram}" target="_blank" rel="noopener noreferrer" aria-label="${option.name} Instagram"><img src="${option.icon}" alt="" /></a>`
@@ -1560,10 +1784,10 @@ function renderArtPackOptions() {
       : "";
     const thumbnailCells = option.unlocked
       ? `
-          <span class="art-thumb-cell">${getAttackerPreviewMarkup(pack, preview.creeps[0], `${option.name} creep`)}</span>
+          <span class="art-thumb-cell">${getAttackerPreviewMarkup(previewPack, preview.creeps[0], `${option.name} creep`)}</span>
           <span class="art-thumb-cell"><img src="${towerA}" alt="" /></span>
           <span class="art-thumb-cell"><img src="${towerB}" alt="" /></span>
-          <span class="art-thumb-cell">${getAttackerPreviewMarkup(pack, preview.creeps[1], `${option.name} creep`)}</span>
+          <span class="art-thumb-cell">${getAttackerPreviewMarkup(previewPack, preview.creeps[1], `${option.name} creep`)}</span>
         `
       : `
           <span class="art-thumb-cell locked-placeholder"></span>
@@ -1672,6 +1896,15 @@ function refreshMusicOptionsUI() {
   }
 }
 
+function getOwnerVisualSide(owner) {
+  return owner === "ai" ? "ai" : "player";
+}
+
+function getArtPackSideAssets(pack, side, key) {
+  const fallbackPack = ART_PACKS[DEFAULT_OPTIONS.artPack] || {};
+  return pack.sideAssets?.[side]?.[key] || pack[key] || fallbackPack[key] || {};
+}
+
 function applyPixiTemplate(template = {}) {
   ARTBOARD_WIDTH = template.artboardWidth || 630;
   ARTBOARD_HEIGHT = template.artboardHeight || 860;
@@ -1694,18 +1927,40 @@ function applyArtPack(artPackId, rerender = false) {
   activeArtPackId = ART_PACKS[normalizedArtPackId] ? normalizedArtPackId : DEFAULT_OPTIONS.artPack;
   activeArtPack = nextPack;
   applyPixiTemplate(activeArtPack.pixiTemplate);
-  towerSpritePaths = activeArtPack.towers;
-  towerFireSheetConfig = activeArtPack.towerFireSheets || {};
-  attackerIconPaths = activeArtPack.attackerIcons;
-  attackerSpriteConfig = activeArtPack.attackerSprites;
+  towerSpritePathSets = {
+    player: getArtPackSideAssets(activeArtPack, "player", "towers"),
+    ai: getArtPackSideAssets(activeArtPack, "ai", "towers")
+  };
+  towerSpritePaths = towerSpritePathSets.player;
+  towerFireSheetConfigSets = {
+    player: getArtPackSideAssets(activeArtPack, "player", "towerFireSheets"),
+    ai: getArtPackSideAssets(activeArtPack, "ai", "towerFireSheets")
+  };
+  towerFireSheetConfig = towerFireSheetConfigSets.player;
+  attackerIconPathSets = {
+    player: getArtPackSideAssets(activeArtPack, "player", "attackerIcons"),
+    ai: getArtPackSideAssets(activeArtPack, "ai", "attackerIcons")
+  };
+  attackerIconPaths = attackerIconPathSets.player;
+  attackerSpriteConfigSets = {
+    player: getArtPackSideAssets(activeArtPack, "player", "attackerSprites"),
+    ai: getArtPackSideAssets(activeArtPack, "ai", "attackerSprites")
+  };
+  attackerSpriteConfig = attackerSpriteConfigSets.player;
   creepKillEffectConfig = activeArtPack.creepKillEffect || null;
   attackerSprites = {};
-  for (const attackerId of Object.keys(attackerSpriteConfig)) {
-    const cfg = attackerSpriteConfig[attackerId];
-    const img = new Image();
-    img.src = cfg.path;
-    attackerSprites[attackerId] = img;
+  attackerSpriteSets = { player: {}, ai: {} };
+  for (const side of ["player", "ai"]) {
+    for (const [attackerId, cfg] of Object.entries(attackerSpriteConfigSets[side] || {})) {
+      if (!cfg) {
+        continue;
+      }
+      const img = new Image();
+      img.src = cfg.path;
+      attackerSpriteSets[side][attackerId] = img;
+    }
   }
+  attackerSprites = attackerSpriteSets.player;
   creepKillEffectSprite = null;
   if (creepKillEffectConfig?.path) {
     creepKillEffectSprite = new Image();
@@ -2848,26 +3103,28 @@ function refreshTowerSlots() {
   const enemySlots = enemySlotsEl.querySelectorAll(".tower-slot");
   const playerSlots = playerSlotsEl.querySelectorAll(".tower-slot");
 
-  const towerMarkup = (tower) => {
+  const towerMarkup = (tower, owner = "player") => {
     if (!tower) {
       return "";
     }
     const safeLevel = Math.max(1, Number(tower.level) || 1);
+    const side = getOwnerVisualSide(owner);
+    const towerPath = towerSpritePathSets[side]?.[tower.id] || towerSpritePaths[tower.id];
     return `<div class="slot-tower">
-      <img class="tower-icon-slot level-${safeLevel}" src="${towerSpritePaths[tower.id]}" alt="${tower.name} tower" />
+      <img class="tower-icon-slot level-${safeLevel}" src="${towerPath}" alt="${tower.name} tower" />
     </div>`;
   };
 
   for (let i = 0; i < 5; i += 1) {
     const playerSlot = playerSlots[i];
     const playerTower = state.playerTowers[i];
-    playerSlot.innerHTML = playerTower ? towerMarkup(playerTower) : `<span>${i + 1}</span>`;
+    playerSlot.innerHTML = playerTower ? towerMarkup(playerTower, "player") : `<span>${i + 1}</span>`;
     playerSlot.classList.toggle("filled", !!playerTower);
     playerSlot.classList.toggle("placement-target", canPlaceSelectedTowerInSlot(i));
 
     const enemySlot = enemySlots[i];
     const aiTower = state.aiTowers[i];
-    enemySlot.innerHTML = aiTower ? towerMarkup(aiTower) : "";
+    enemySlot.innerHTML = aiTower ? towerMarkup(aiTower, "ai") : "";
     enemySlot.classList.toggle("filled", !!aiTower);
   }
 }
@@ -5077,21 +5334,30 @@ async function buildPixiScene() {
   const highZTexture = PIXI_HIGH_Z_LAYER ? await loadImageTexture(`${PIXI_LAYER_ASSET_ROOT}/${PIXI_HIGH_Z_LAYER}`) : null;
   const timerFillTexture = PIXI_TIMER_FILL_LAYER ? await loadImageTexture(`${PIXI_LAYER_ASSET_ROOT}/${PIXI_TIMER_FILL_LAYER}`) : null;
   const markerTexture = await loadImageTexture(BATTLEFIELD_TOWER_MARKER_PATH);
-  const towerTextures = {};
-  for (const [towerId, path] of Object.entries(towerSpritePaths)) {
-    towerTextures[towerId] = await loadImageTexture(path);
+  const towerTextureSets = { player: {}, ai: {} };
+  for (const side of ["player", "ai"]) {
+    for (const [towerId, path] of Object.entries(towerSpritePathSets[side] || {})) {
+      towerTextureSets[side][towerId] = await loadImageTexture(path);
+    }
   }
-  const towerFireTextures = {};
-  for (const [towerId, cfg] of Object.entries(towerFireSheetConfig)) {
-    towerFireTextures[towerId] = await loadImageTexture(cfg.path);
+  const towerFireTextureSets = { player: {}, ai: {} };
+  for (const side of ["player", "ai"]) {
+    for (const [towerId, cfg] of Object.entries(towerFireSheetConfigSets[side] || {})) {
+      towerFireTextureSets[side][towerId] = await loadImageTexture(cfg.path);
+    }
   }
-  const attackerTextures = {};
-  for (const [attackerId, cfg] of Object.entries(attackerSpriteConfig)) {
-    attackerTextures[attackerId] = cfg ? await loadImageTexture(cfg.path) : null;
+  const attackerTextureSets = { player: {}, ai: {} };
+  for (const side of ["player", "ai"]) {
+    for (const [attackerId, cfg] of Object.entries(attackerSpriteConfigSets[side] || {})) {
+      attackerTextureSets[side][attackerId] = cfg ? await loadImageTexture(cfg.path) : null;
+    }
   }
-  pixiState.towerTextures = towerTextures;
-  pixiState.towerFireTextures = towerFireTextures;
-  pixiState.attackerTextures = attackerTextures;
+  pixiState.towerTextureSets = towerTextureSets;
+  pixiState.towerTextures = towerTextureSets.player;
+  pixiState.towerFireTextureSets = towerFireTextureSets;
+  pixiState.towerFireTextures = towerFireTextureSets.player;
+  pixiState.attackerTextureSets = attackerTextureSets;
+  pixiState.attackerTextures = attackerTextureSets.player;
 
   const artboard = new PIXI.Container();
   pixiState.artboard = artboard;
@@ -5108,17 +5374,9 @@ async function buildPixiScene() {
 
   const markerLayer = new PIXI.Container();
   pixiState.markerLayer = markerLayer;
+  pixiState.markerTexture = markerTexture;
+  pixiState.lastMarkerSignature = "";
   app.stage.addChild(markerLayer);
-  for (const pos of [...towerPosAI, ...towerPosPlayer]) {
-    addFittedSprite(
-      markerLayer,
-      markerTexture,
-      pos.x * LOGICAL_CANVAS_WIDTH,
-      pos.y * LOGICAL_CANVAS_HEIGHT,
-      BATTLEFIELD_TOWER_MARKER_SIZE,
-      BATTLEFIELD_TOWER_MARKER_SIZE
-    );
-  }
 
   const battlefieldLayer = new PIXI.Container();
   const battlefieldMask = new PIXI.Graphics();
@@ -5648,6 +5906,41 @@ function updatePixiHudText() {
   pixiState.hudText.playerScore.text = String(state.playerScore);
 }
 
+function updatePixiMarkers() {
+  if (!pixiState.ready || !pixiState.markerLayer || !pixiState.markerTexture) {
+    return;
+  }
+  const signature = JSON.stringify({
+    player: state.playerTowers.map((tower) => (tower ? "1" : "0")),
+    ai: state.aiTowers.map((tower) => (tower ? "1" : "0"))
+  });
+  if (signature === pixiState.lastMarkerSignature) {
+    return;
+  }
+  pixiState.lastMarkerSignature = signature;
+  pixiState.markerLayer.removeChildren();
+
+  const drawMarker = (pos) => {
+    addFittedSprite(
+      pixiState.markerLayer,
+      pixiState.markerTexture,
+      pos.x * LOGICAL_CANVAS_WIDTH,
+      pos.y * LOGICAL_CANVAS_HEIGHT,
+      BATTLEFIELD_TOWER_MARKER_SIZE,
+      BATTLEFIELD_TOWER_MARKER_SIZE
+    );
+  };
+
+  for (let i = 0; i < 5; i += 1) {
+    if (!state.aiTowers[i]) {
+      drawMarker(towerPosAI[i]);
+    }
+    if (!state.playerTowers[i]) {
+      drawMarker(towerPosPlayer[i]);
+    }
+  }
+}
+
 function updatePixiTowers() {
   if (!pixiState.ready) {
     return;
@@ -5669,16 +5962,20 @@ function updatePixiTowers() {
     if (!tower) {
       return;
     }
+    const side = getOwnerVisualSide(options.owner);
+    const towerTextures = pixiState.towerTextureSets[side] || pixiState.towerTextures;
+    const towerFireTextures = pixiState.towerFireTextureSets[side] || pixiState.towerFireTextures;
+    const sideFireConfig = towerFireSheetConfigSets[side] || towerFireSheetConfig;
     const levelScale = Math.max(1, Number(tower.level) || 1) > 1 ? 1.16 : 1;
     const fireAnim = options.fireKey ? activeFireAnimations.get(options.fireKey) : null;
-    const fireCfg = fireAnim ? towerFireSheetConfig[tower.id] : null;
-    if (fireAnim && fireCfg && pixiState.towerFireTextures[tower.id]) {
+    const fireCfg = fireAnim ? sideFireConfig[tower.id] : null;
+    if (fireAnim && fireCfg && towerFireTextures[tower.id]) {
       const frameCount = fireCfg.frames || 4;
       const progress = clamp(1 - fireAnim.life / fireAnim.maxLife, 0, 0.999);
       const frameIndex = Math.min(frameCount - 1, Math.floor(progress * frameCount));
       addFittedSheetFrame(
         pixiState.towerLayer,
-        pixiState.towerFireTextures[tower.id],
+        towerFireTextures[tower.id],
         pos.x * LOGICAL_CANVAS_WIDTH,
         pos.y * LOGICAL_CANVAS_HEIGHT + (options.yOffset || 0),
         TOWER_RENDER_BOX_WIDTH * levelScale,
@@ -5690,7 +5987,7 @@ function updatePixiTowers() {
     }
     addFittedSprite(
       pixiState.towerLayer,
-      pixiState.towerTextures[tower.id],
+      towerTextures[tower.id],
       pos.x * LOGICAL_CANVAS_WIDTH,
       pos.y * LOGICAL_CANVAS_HEIGHT + (options.yOffset || 0),
       TOWER_RENDER_BOX_WIDTH * levelScale,
@@ -5700,8 +5997,8 @@ function updatePixiTowers() {
   };
 
   for (let i = 0; i < 5; i += 1) {
-    drawTowerSprite(state.aiTowers[i], towerPosAI[i], { fireKey: `ai:${i}` });
-    drawTowerSprite(state.playerTowers[i], towerPosPlayer[i], { yOffset: -6, fireKey: `player:${i}` });
+    drawTowerSprite(state.aiTowers[i], towerPosAI[i], { owner: "ai", fireKey: `ai:${i}` });
+    drawTowerSprite(state.playerTowers[i], towerPosPlayer[i], { owner: "player", yOffset: -6, fireKey: `player:${i}` });
   }
 }
 
@@ -5833,7 +6130,8 @@ function drawTowerShadows() {
 function drawAttackerShadows(units) {
   for (const unit of units) {
     const pos = attackerPosition(unit);
-    const spriteCfg = attackerSpriteConfig[unit.defId];
+    const side = getOwnerVisualSide(unit.owner);
+    const spriteCfg = attackerSpriteConfigSets[side]?.[unit.defId] || attackerSpriteConfig[unit.defId];
     drawObjectShadow(
       pos.x,
       pos.y,
@@ -5849,11 +6147,12 @@ function drawAttackers(units) {
     const pos = attackerPosition(unit);
     const x = canvas.width * pos.x;
     const y = canvas.height * pos.y;
-    const spriteCfg = attackerSpriteConfig[unit.defId];
+    const side = getOwnerVisualSide(unit.owner);
+    const spriteCfg = attackerSpriteConfigSets[side]?.[unit.defId] || attackerSpriteConfig[unit.defId];
     const renderWidth = spriteCfg?.renderWidth || 42;
     const renderHeight = spriteCfg?.renderHeight || 42;
 
-    const spriteImg = attackerSprites[unit.defId];
+    const spriteImg = attackerSpriteSets[side]?.[unit.defId] || attackerSprites[unit.defId];
     if (spriteCfg && spriteImg && spriteImg.complete) {
       const frame = Math.floor(state.animationClock * spriteCfg.fps) % spriteCfg.frames;
       const shouldInvertForAI = unit.owner === "ai" && (unit.defId === "wisp" || unit.defId === "tank");
@@ -6263,6 +6562,7 @@ function drawBoard() {
   drawDeathEffects();
   drawRoundBanner();
   updatePixiDynamicTexture();
+  updatePixiMarkers();
   updatePixiTowers();
   updatePixiTimerFill();
   updatePixiCardStates();

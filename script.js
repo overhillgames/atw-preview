@@ -93,11 +93,11 @@ let CREEP_CARD_CENTERS = [...DEFAULT_CREEP_CARD_CENTERS];
 let TIMER_FILL_RECT = { x: 22, y: 238, width: 20, height: 122 };
 
 const towerDefs = [
-  { id: "violet", name: "Violet", cost: 2, damage: 2, range: 0.416, fireRate: 0.935, color: "#7c3aed", coneDegrees: 220, maxTargets: 1 },
+  { id: "violet", name: "Violet", cost: 3, damage: 2, range: 0.416, fireRate: 0.935, color: "#7c3aed", coneDegrees: 220, maxTargets: 1 },
   { id: "yellow", name: "Yellow", cost: 5, damage: 2, range: 0.520, fireRate: 0.95, color: "#eab308", coneDegrees: BASE_TOWER_CONE_DEGREES * 1.1, maxTargets: 1 },
   { id: "red", name: "Red", cost: 7, damage: 3.45, range: 0.434, fireRate: 1.05, color: "#dc2626", coneDegrees: BASE_TOWER_CONE_DEGREES, maxTargets: 1 },
   { id: "green", name: "Green", cost: 9, damage: 4, range: 0.635, fireRate: 1.15, color: "#22c55e", coneDegrees: BASE_TOWER_CONE_DEGREES * 0.9, maxTargets: 1 },
-  { id: "blue", name: "Blue", cost: 13, damage: 4, range: 0.492, fireRate: 1.375, color: "#2563eb", coneDegrees: 200, maxTargets: 2 }
+  { id: "blue", name: "Blue", cost: 11, damage: 4, range: 0.492, fireRate: 1.375, color: "#2563eb", coneDegrees: 200, maxTargets: 2 }
 ];
 const LEGACY_TOWER_ID_ALIASES = {
   orange: "blue"
